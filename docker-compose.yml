@@ -1,0 +1,8 @@
+version: "3.8"
+
+services:
+  preflight-cli:
+    build: .
+    image: preflight-cli:latest
+    container_name: preflight-cli
+    restart: unless-stopped
