@@ -1,8 +1,20 @@
-version: "3.8"
 
 services:
-  preflight-cli:
+  app:
     build: .
-    image: preflight-cli:latest
-    container_name: preflight-cli
+    environment:
+      PORT: "8000"
+    mem_limit: 512m
     restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=aetherhost-net"
+      - "traefik.http.routers.preflight-cli-app.rule=Host(`preflight-cli.aetherhost.com.ng`)"
+      - "traefik.http.routers.preflight-cli-app.entrypoints=websecure"
+      - "traefik.http.routers.preflight-cli-app.tls.certresolver=letsencrypt"
+      - "traefik.http.services.preflight-cli-app.loadbalancer.server.port=8000"
+    networks:
+      - aetherhost-net
+networks:
+  aetherhost-net:
+    external: true
