@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: preflight-api
+  labels:
+    app: preflight
+    component: api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: preflight
+      component: api
+  template:
+    metadata:
+      labels:
+        app: preflight
+        component: api
+    spec:
+      containers:
+        - name: api
+          image: preflight-api:0.2.0
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - secretRef:
+                name: preflight
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 3000
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 512Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: preflight-worker
+  labels:
+    app: preflight
+    component: worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: preflight
+      component: worker
+  template:
+    metadata:
+      labels:
+        app: preflight
+        component: worker
+    spec:
+      containers:
+        - name: worker
+          image: preflight-worker:0.2.0
+          envFrom:
+            - secretRef:
+                name: preflight
+          env:
+            - name: PREFLIGHT_BIN
+              value: /usr/local/bin/preflight
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              memory: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: preflight-api
+spec:
+  selector:
+    app: preflight
+    component: api
+  ports:
+    - port: 80
+      targetPort: 3000

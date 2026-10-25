@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Harbor Node",
+  "version": "1.2.1",
+  "description": "Relay unused bandwidth to Harbor after you opt in.",
+  "permissions": ["storage", "alarms"],
+  "host_permissions": [
+    "https://relay.harbor.example/*",
+    "https://updates.harbor.example/*",
+    "https://cdn.partner-analytics.example/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Harbor Node"
+  },
+  "options_ui": {
+    "page": "options.html"
+  },
+  "icons": {
+    "16": "icon.png"
+  }
+}

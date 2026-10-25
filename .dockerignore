@@ -1,4 +1,7 @@
 target
 **/*.rs.bk
-Dockerfile
-docker-compose.yml
+node_modules
+dist
+data
+.env
+.git

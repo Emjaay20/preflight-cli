@@ -1,20 +1,110 @@
-
 services:
-  app:
-    build: .
+  postgres:
+    image: postgres:16-alpine
     environment:
-      PORT: "8000"
-    mem_limit: 512m
-    restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=aetherhost-net"
-      - "traefik.http.routers.preflight-cli-app.rule=Host(`preflight-cli.aetherhost.com.ng`)"
-      - "traefik.http.routers.preflight-cli-app.entrypoints=websecure"
-      - "traefik.http.routers.preflight-cli-app.tls.certresolver=letsencrypt"
-      - "traefik.http.services.preflight-cli-app.loadbalancer.server.port=8000"
-    networks:
-      - aetherhost-net
-networks:
-  aetherhost-net:
-    external: true
+      POSTGRES_USER: preflight
+      POSTGRES_PASSWORD: preflight
+      POSTGRES_DB: preflight
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U preflight"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.platform
+      target: node
+    working_dir: /app/apps/platform
+    environment:
+      DATABASE_URL: postgresql://preflight:preflight@postgres:5432/preflight
+      DEMO_API_KEY: pf_live_demo_harbor_localdevsecret0001
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["sh", "-c", "npx prisma migrate deploy && npx tsx prisma/seed.ts"]
+    restart: "no"
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.platform
+      target: api
+    ports:
+      - "3080:3000"
+    environment:
+      DATABASE_URL: postgresql://preflight:preflight@postgres:5432/preflight
+      REDIS_URL: redis://redis:6379
+      DATA_DIR: /data
+      FIXTURES_DIR: /app/fixtures/harbor-node
+      PREFLIGHT_BIN: /usr/local/bin/preflight
+      DEMO_MODE: "true"
+      DEMO_API_KEY: pf_live_demo_harbor_localdevsecret0001
+      INTERNAL_BLOB_TOKEN: ${INTERNAL_BLOB_TOKEN:-}
+      LOG_LEVEL: info
+    volumes:
+      - artifacts:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.platform
+      target: worker
+    environment:
+      DATABASE_URL: postgresql://preflight:preflight@postgres:5432/preflight
+      REDIS_URL: redis://redis:6379
+      DATA_DIR: /data
+      FIXTURES_DIR: /app/fixtures/harbor-node
+      PREFLIGHT_BIN: /usr/local/bin/preflight
+      # For detached/remote worker nodes without a shared volume, set:
+      # CAS_REMOTE_URL: http://api:3000
+      INTERNAL_BLOB_TOKEN: ${INTERNAL_BLOB_TOKEN:-}
+      SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL:-}
+      LOG_LEVEL: info
+    volumes:
+      - artifacts:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    profiles: ["observability"]
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus:/prometheus
+    depends_on:
+      api:
+        condition: service_started
+
+volumes:
+  pgdata:
+  artifacts:
+  prometheus:

@@ -2,5 +2,12 @@
 name = "preflight-cli"
 version = "0.1.0"
 edition = "2021"
+rust-version = "1.75"
+description = "Release-clearance CLI for Chromium extension builds"
+publish = false
+
+[[bin]]
+name = "preflight"
+path = "src/main.rs"
 
 [dependencies]

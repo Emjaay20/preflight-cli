@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Preflight — Chromium Extension Release Clearance</title>
+  <style>
+    :root {
+      --ink: #16140f;
+      --paper: #f3efe4;
+      --card: #faf7f0;
+      --rule: #d7d0c0;
+      --muted: #6b6458;
+      --accent: #b85318;
+      --block: #9b1c1c;
+      --human: #9a6700;
+      --ship: #17663a;
+      --queued: #3f5f8a;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 15px/1.48 "Iowan Old Style", Palatino, Georgia, serif;
+    }
+    a { color: inherit; }
+    code, pre, .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
+    }
+    pre {
+      background: #191713;
+      color: #f3efe4;
+      padding: 0.85rem 1rem;
+      overflow-x: auto;
+      border: 1px solid var(--ink);
+      margin: 0.5rem 0;
+    }
+    header.topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.9rem 2rem;
+      border-bottom: 1px solid var(--rule);
+      background: var(--card);
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .brand-group {
+      display: flex;
+      align-items: baseline;
+      gap: 0.85rem;
+    }
+    .brand {
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-weight: 700;
+      font-size: 0.88rem;
+      text-decoration: none;
+    }
+    nav.primary-nav {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+    }
+    nav.primary-nav button {
+      width: auto;
+      margin: 0;
+      padding: 0.42rem 0.8rem;
+      background: transparent;
+      color: var(--ink);
+      border: 1px solid transparent;
+      font-size: 0.82rem;
+      letter-spacing: 0.04em;
+    }
+    nav.primary-nav button[aria-current="page"] {
+      border-bottom: 2px solid var(--accent);
+      font-weight: 700;
+    }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .pill {
+      display: inline-block;
+      border: 1px solid var(--rule);
+      background: #fff;
+      padding: 0.2rem 0.55rem;
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 11px;
+    }
+    .pill.ok-pill {
+      border-color: var(--ship);
+      color: var(--ship);
+    }
+    .pill.warn-pill {
+      border-color: var(--human);
+      color: var(--human);
+    }
+    .pill.block-pill {
+      border-color: var(--block);
+      color: var(--block);
+    }
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 1.75rem 2rem 3rem;
+    }
+    h1 { font-size: 1.5rem; font-weight: 600; margin: 0 0 0.4rem; }
+    h2 { font-size: 0.95rem; letter-spacing: 0.1em; text-transform: uppercase; margin: 0 0 0.75rem; font-family: ui-monospace, Menlo, monospace; }
+    h3 { font-size: 1.05rem; margin: 0.75rem 0 0.35rem; }
+    p.lead { color: var(--muted); margin: 0 0 1.25rem; }
+    .muted { color: var(--muted); }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--rule);
+      padding: 1.25rem 1.4rem;
+      margin-bottom: 1.25rem;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--rule);
+      padding-bottom: 0.65rem;
+      margin-bottom: 1rem;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .card-header h2 { margin: 0; }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .kpi-card {
+      background: var(--card);
+      border: 1px solid var(--rule);
+      padding: 0.95rem 1.15rem;
+    }
+    .kpi-label {
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .kpi-value {
+      font-size: 1.55rem;
+      font-weight: 700;
+      margin: 0.25rem 0;
+      font-family: ui-monospace, Menlo, monospace;
+    }
+    .kpi-sub {
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    @media (max-width: 960px) {
+      .grid-2, .grid-3, .kpi-grid { grid-template-columns: 1fr; }
+    }
+    form { margin: 0; }
+    fieldset {
+      border: 1px solid var(--rule);
+      padding: 0.65rem 0.85rem;
+      margin: 0.85rem 0 0;
+      background: #fff;
+    }
+    legend {
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0 0.35rem;
+    }
+    label {
+      display: block;
+      font-size: 0.74rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0.85rem 0 0.3rem;
+    }
+    input, select, button, textarea {
+      font: inherit;
+      width: 100%;
+      padding: 0.52rem 0.65rem;
+      border: 1px solid var(--ink);
+      background: #fff;
+      color: var(--ink);
+    }
+    input:focus-visible, select:focus-visible, button:focus-visible, textarea:focus-visible, summary:focus-visible, pre:focus-visible {
+      outline: 3px solid var(--queued);
+      outline-offset: 2px;
+    }
+    textarea {
+      min-height: 95px;
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 12px;
+      resize: vertical;
+    }
+    button {
+      cursor: pointer;
+      background: var(--ink);
+      color: var(--paper);
+      margin-top: 0.65rem;
+    }
+    button.accent {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    button.secondary {
+      background: #fff;
+      color: var(--ink);
+    }
+    button.row {
+      width: auto;
+      margin: 0 0.4rem 0.4rem 0;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.84rem;
+    }
+    button.small {
+      width: auto;
+      margin: 0;
+      padding: 0.22rem 0.55rem;
+      font-size: 11px;
+      font-family: ui-monospace, Menlo, monospace;
+    }
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      margin-top: 0.25rem;
+    }
+    .radio-option {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+      font-size: 0.88rem;
+      text-transform: none;
+      letter-spacing: normal;
+      color: var(--ink);
+      margin: 0;
+      cursor: pointer;
+    }
+    .radio-option input[type="radio"] {
+      width: auto;
+      margin: 0;
+      accent-color: var(--accent);
+    }
+    .inline-row {
+      display: flex;
+      gap: 0.45rem;
+      align-items: stretch;
+      flex-wrap: wrap;
+    }
+    .inline-row input, .inline-row select { flex: 1; min-width: 180px; }
+    .inline-row button { width: auto; margin-top: 0; white-space: nowrap; }
+    .workspace-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      background: var(--card);
+      border: 1px solid var(--rule);
+      padding: 0.75rem 1.15rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+    .workspace-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex: 1;
+      min-width: 280px;
+    }
+    .workspace-bar-left label {
+      margin: 0;
+      white-space: nowrap;
+      color: var(--ink);
+      font-weight: 600;
+    }
+    .stamp {
+      display: inline-block;
+      border: 2px solid currentColor;
+      padding: 0.15rem 0.55rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 700;
+      font-size: 0.78rem;
+      font-family: ui-monospace, Menlo, monospace;
+    }
+    .stamp.block, .stamp.failed, .stamp.reject { color: var(--block); }
+    .stamp.needs_human, .stamp.hold, .stamp.warn { color: var(--human); }
+    .stamp.ship_with_conditions, .stamp.ship, .stamp.pass { color: var(--ship); }
+    .stamp.queued, .stamp.running, .stamp.pending { color: var(--queued); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 12px;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.5rem 0.45rem;
+      border-bottom: 1px solid var(--rule);
+      vertical-align: top;
+    }
+    th {
+      color: var(--muted);
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-size: 10px;
+    }
+    .console-log {
+      background: #171511;
+      color: #e8e2d5;
+      border: 1px solid var(--ink);
+      padding: 0.85rem 1rem;
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 12px;
+      max-height: 360px;
+      overflow-y: auto;
+    }
+    .log-row {
+      padding: 0.45rem 0;
+      border-bottom: 1px dashed #332f26;
+    }
+    .log-row:last-child { border-bottom: none; }
+    .log-tag {
+      display: inline-block;
+      padding: 0.08rem 0.4rem;
+      font-size: 10px;
+      text-transform: uppercase;
+      margin-right: 0.4rem;
+      border: 1px solid currentColor;
+    }
+    .log-tag.pass { color: #5ad48c; }
+    .log-tag.warn { color: #f5b942; }
+    .log-tag.block { color: #ff6b6b; }
+    .log-tag.running, .log-tag.pending { color: #7cb3ff; }
+    details {
+      border-bottom: 1px solid var(--rule);
+      padding: 0.75rem 0;
+    }
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+    dialog {
+      border: 2px solid var(--ink);
+      background: var(--paper);
+      color: var(--ink);
+      max-width: 620px;
+      width: calc(100% - 2rem);
+      padding: 1.75rem;
+    }
+    dialog::backdrop {
+      background: rgba(22, 20, 15, 0.55);
+    }
+    .keybox {
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 12px;
+      word-break: break-all;
+      background: #fff;
+      border: 1px dashed var(--ink);
+      padding: 0.75rem;
+      margin: 0.75rem 0;
+    }
+    .err { color: var(--block); margin-top: 0.65rem; }
+    .ok { color: var(--ship); margin-top: 0.65rem; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand-group">
+      <a href="#home" class="brand" id="brandHome">Preflight</a>
+      <span class="muted" id="headerContext">Chromium Extension Release Clearance</span>
+    </div>
+    <nav class="primary-nav" aria-label="Primary">
+      <button type="button" data-nav="home" aria-current="page">Home</button>
+      <button type="button" data-nav="docs">Docs</button>
+      <button type="button" data-nav="auth" id="navAuthBtn">Login / Sign Up</button>
+      <button type="button" data-nav="sandbox">Sandbox</button>
+      <button type="button" data-nav="console" id="navConsoleBtn">Console</button>
+    </nav>
+    <div class="header-actions">
+      <span class="pill ok-pill">forbid(unsafe_code)</span>
+      <span class="pill warn-pill">auto_ship: false</span>
+      <button type="button" class="row accent" id="headerSandboxBtn" style="margin:0">Open sandbox</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- ==================== 1. LANDING PAGE (HOME) ==================== -->
+    <section id="view-home">
+      <div class="card" style="padding: 2rem">
+        <p class="mono muted" style="margin:0 0 0.4rem; text-transform:uppercase; letter-spacing:0.1em">Release Clearance Gate · Rust CLI + Multi-Tenant Web Control Plane</p>
+        <h1 style="font-size:1.85rem; max-width:780px">Does this build still match the last shipped artifact and the claims we made to users and stores?</h1>
+        <p class="lead" style="max-width:760px; margin-top:0.65rem">
+          Chrome extension zips drift. A teammate adds an undeclared analytics host, <code>eval()</code>, or broad <code>*://*/*</code> permissions while your store listing still promises strict opt-in privacy. Preflight gates every build before Chrome Web Store submission — in the browser or from your terminal.
+        </p>
+        <div style="margin-top:1.25rem">
+          <button type="button" class="row accent" data-goto="sandbox">Try Live Sandbox (No Login)</button>
+          <button type="button" class="row" data-goto="auth">Organization / Individual Sign Up</button>
+          <button type="button" class="row secondary" data-goto="docs">Read Docs &amp; CLI Guide</button>
+          <button type="button" class="row secondary hidden" id="homeDemoBtn">Load Demo Workspace (Harbor Node)</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>Structured 5-Agent Static Analysis Pipeline</h2>
+          <span class="pill">Out-of-process Rust binary · Zero JS execution</span>
+        </div>
+        <p class="lead">Every review runs five deterministic analysis agents and streams structured logs explaining what was inspected and why a verdict was reached:</p>
+        <div class="grid-3">
+          <div class="card" style="margin:0; background:#fff">
+            <span class="pill">AGENT 01 · src/artifact.rs</span>
+            <h3>Artifact Gate &amp; Hasher</h3>
+            <p class="muted">Unpacks <code>.zip</code> and <code>.crx</code> v3 archives in memory, computes cryptographic SHA-256 digests, and confines files to the tenant's isolated storage partition.</p>
+          </div>
+          <div class="card" style="margin:0; background:#fff">
+            <span class="pill">AGENT 02 · src/extract.rs</span>
+            <h3>Static Evidence Extractor</h3>
+            <p class="muted">Walks <code>manifest.json</code>, HTML, and JS tokens without ever calling <code>eval</code>. Extracts permissions, network sockets, sensitive APIs, consent checks, and kill switches.</p>
+          </div>
+          <div class="card" style="margin:0; background:#fff">
+            <span class="pill">AGENT 03 · src/diff.rs</span>
+            <h3>Baseline Capability Diff</h3>
+            <p class="muted">Automatically diffs the candidate build against the project's last shipped artifact to flag newly added permissions (<code>DIFF-01</code>) and hosts (<code>DIFF-02</code>).</p>
+          </div>
+          <div class="card" style="margin:0; background:#fff">
+            <span class="pill">AGENT 04 · src/rules.rs</span>
+            <h3>Policy &amp; Claims Auditor</h3>
+            <p class="muted">Evaluates <code>cws-2026.1</code> (MV3, CSP, missing files, cleartext) and <code>node-client-2026.1</code> (host allowlist vs. <code>claims.json</code>, consent gate, loopback protection).</p>
+          </div>
+          <div class="card" style="margin:0; background:#fff">
+            <span class="pill">AGENT 05 · src/review.rs</span>
+            <h3>Release Clearance Arbiter</h3>
+            <p class="muted">Emits <code>block</code>, <code>needs_human</code>, or <code>ship_with_conditions</code>. Enforces ADR-0003: <code>auto_ship</code> is hardcoded to <code>false</code>; a human signs off.</p>
+          </div>
+          <div class="card" style="margin:0; background:#fff">
+            <span class="pill">UNIFIED KEY · pf_live_…</span>
+            <h3>Browser + Rust CLI Bridge</h3>
+            <p class="muted">Your <code>pf_live_…</code> API key works in the Web Console AND directly in your terminal via <code>preflight review --key</code> and <code>preflight push</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <h2>For Organizations &amp; Teams</h2>
+            <span class="pill">accountType: organization</span>
+          </div>
+          <p class="muted">Create an organization workspace, manage multiple extension projects with isolated baselines, and invite team members with scoped RBAC keys (<strong>admin</strong>, <strong>reviewer</strong>, or <strong>ci</strong>).</p>
+          <button type="button" class="row" data-signup-mode="organization">Create Organization Account</button>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h2>For Independent Developers</h2>
+            <span class="pill">accountType: individual</span>
+          </div>
+          <p class="muted">Shipping your own Chrome extension solo? Sign up as an Independent Developer to get a personal isolated workspace, project claims storage, and a <code>pf_live_…</code> key for your terminal and browser.</p>
+          <button type="button" class="row secondary" data-signup-mode="individual">Create Individual Account</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 2. DOCUMENTATION (DOCS) ==================== -->
+    <section id="view-docs" class="hidden">
+      <div class="card">
+        <div class="card-header">
+          <h2>Preflight Documentation &amp; Reference</h2>
+          <a href="/docs" class="pill">OpenAPI / Swagger UI (/docs) →</a>
+        </div>
+        <p class="lead">How to use Preflight across the Web Console, the Rust CLI in your terminal, and CI/CD pipelines.</p>
+
+        <details name="docs-section" open>
+          <summary>1. Using Your API Key with the Rust CLI in Terminal</summary>
+          <p class="muted">Every Organization member and Individual user gets a <code>pf_live_&lt;prefix&gt;_&lt;secret&gt;</code> key. You can use that exact same key in the browser console OR in your terminal:</p>
+          <figure style="margin:0">
+            <figcaption class="mono muted">Local static scan with key provenance or push directly to your web project:</figcaption>
+            <pre tabindex="0"><code># 1. Run deterministic local scan with your API key:
+cargo run -- review fixtures/harbor-node/clean-relay \
+  --claims fixtures/harbor-node/claims.json \
+  --key pf_live_yourprefix_yoursecret \
+  --out reviews/clean
+
+# 2. Push local build + claims from terminal straight to your Web Console project:
+cargo run -- push fixtures/harbor-node/clean-relay.zip \
+  --project &lt;YOUR_PROJECT_ID&gt; \
+  --claims fixtures/harbor-node/claims.json \
+  --key pf_live_yourprefix_yoursecret \
+  --api http://localhost:3080</code></pre>
+          </figure>
+        </details>
+
+        <details name="docs-section">
+          <summary>2. Structured Scanner Agents &amp; Policy Packs (cws-2026.1 &amp; node-client-2026.1)</summary>
+          <p class="muted">The scanner evaluates two built-in rule packs against your extension artifact and <code>claims.json</code>:</p>
+          <table>
+            <thead>
+              <tr><th>Control</th><th>Pack</th><th>Severity</th><th>What It Verifies</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>CWS-01</td><td>cws-2026.1</td><td>blocker</td><td><code>manifest_version</code> must be <code>3</code>.</td></tr>
+              <tr><td>CWS-02</td><td>cws-2026.1</td><td>high</td><td>Every file referenced in <code>manifest.json</code> exists in the archive.</td></tr>
+              <tr><td>CWS-03 / CWS-07</td><td>cws-2026.1</td><td>high</td><td>Blocks broad host patterns (<code>*://*/*</code>, <code>&lt;all_urls&gt;</code>) and cleartext <code>http://</code> or <code>ws://</code> endpoints.</td></tr>
+              <tr><td>CWS-05 / CWS-06</td><td>cws-2026.1</td><td>high</td><td>Requires an <code>https://</code> privacy URL and a declared purpose for every manifest permission.</td></tr>
+              <tr><td>CWS-08</td><td>cws-2026.1</td><td>blocker</td><td>Blocks <code>eval()</code>, <code>new Function()</code>, remote script imports, and <code>unsafe-eval</code> CSP.</td></tr>
+              <tr><td>NODE-01 / NODE-02</td><td>node-client-2026.1</td><td>blocker</td><td>Every manifest host permission and JS network destination must match <code>claims.allowed_hosts</code>.</td></tr>
+              <tr><td>NODE-03 / NODE-04</td><td>node-client-2026.1</td><td>blocker/high</td><td>Networked extensions must enforce an explicit consent check and a runtime kill switch.</td></tr>
+              <tr><td>NODE-06 / NODE-07</td><td>node-client-2026.1</td><td>high</td><td>Blocks private/loopback network targets (<code>127.0.0.1</code>, <code>192.168.x.x</code>) and third-party <code>update_url</code> hosts.</td></tr>
+            </tbody>
+          </table>
+        </details>
+
+        <details name="docs-section">
+          <summary>3. Account Types (Organization vs. Individual) &amp; RBAC Roles</summary>
+          <p class="muted">Preflight isolates every workspace at the database, API key, and filesystem levels:</p>
+          <ul>
+            <li><strong>Organizations (<code>accountType: "organization"</code>):</strong> Designed for teams. Admins can invite team members (<code>POST /v1/members/invite</code>) and assign each person a dedicated <code>pf_live_…</code> key with role <code>admin</code>, <code>reviewer</code>, or <code>ci</code>.</li>
+            <li><strong>Individuals (<code>accountType: "individual"</code>):</strong> Designed for solo developers. Creates a personal workspace with zero team-management overhead while still supporting additional personal CLI/CI keys.</li>
+            <li><strong>Separation of Duties (ADR-0003):</strong> Keys with the <code>ci</code> role can upload builds and poll verdicts, but are cryptographically blocked from signing off human release decisions.</li>
+          </ul>
+        </details>
+
+        <details name="docs-section">
+          <summary>4. HTTP REST API Endpoints</summary>
+          <table>
+            <thead>
+              <tr><th>Method</th><th>Endpoint</th><th>Auth</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>POST</td><td><code>/v1/signup</code></td><td>Public</td><td>Create an <code>organization</code> or <code>individual</code> workspace and mint initial admin key.</td></tr>
+              <tr><td>POST</td><td><code>/v1/sandbox/evaluate</code></td><td>Public</td><td>Run ephemeral sandbox scan on Harbor Node fixtures with live agent console logs.</td></tr>
+              <tr><td>GET</td><td><code>/v1/me</code></td><td>Bearer <code>pf_live_…</code></td><td>Retrieve active workspace, account type, current key role, and projects.</td></tr>
+              <tr><td>POST</td><td><code>/v1/members/invite</code></td><td>Admin Key</td><td>Invite a user under an Organization with their own <code>admin</code>, <code>reviewer</code>, or <code>ci</code> key.</td></tr>
+              <tr><td>POST</td><td><code>/v1/projects/:id/reviews</code></td><td>Any Key</td><td>Upload <code>artifact</code> (.zip/.crx) and optional <code>claims</code> JSON for review.</td></tr>
+              <tr><td>POST</td><td><code>/v1/reviews/:id/sign-off</code></td><td>Admin / Reviewer</td><td>Record mandatory human release decision (<code>ship</code>, <code>hold</code>, <code>reject</code>).</td></tr>
+            </tbody>
+          </table>
+        </details>
+      </div>
+    </section>
+
+    <!-- ==================== 3. LOGIN / SIGN UP ==================== -->
+    <section id="view-auth" class="hidden">
+      <div class="grid-2">
+        <!-- Sign Up Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Create Workspace (Sign Up)</h2>
+            <span class="pill">Mints pf_live_… key</span>
+          </div>
+          <form id="signupForm" action="/v1/signup" method="POST">
+            <fieldset>
+              <legend>Account Type</legend>
+              <div class="radio-group">
+                <label class="radio-option" for="acctOrg">
+                  <input type="radio" id="acctOrg" name="accountType" value="organization" checked />
+                  <span><strong>Organization</strong> — invite team members &amp; manage multiple projects</span>
+                </label>
+                <label class="radio-option" for="acctInd">
+                  <input type="radio" id="acctInd" name="accountType" value="individual" />
+                  <span><strong>Individual</strong> — solo developer workspace for your own builds</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <div id="orgNameGroup">
+              <label for="orgName">Organization Name</label>
+              <input id="orgName" name="organization" placeholder="Acme Extensions Inc." autocomplete="organization" />
+            </div>
+
+            <label for="actorName" id="actorNameLabel">Your Name / Handle (Admin Key Owner)</label>
+            <input id="actorName" name="actorName" required placeholder="alice" autocomplete="name" />
+
+            <label for="signupEmail">Email Address</label>
+            <input id="signupEmail" name="email" type="email" inputmode="email" autocomplete="email" placeholder="alice@example.com" autocorrect="off" autocapitalize="off" spellcheck="false" />
+
+            <label for="projectName">First Extension Project Slug</label>
+            <input id="projectName" name="project" required placeholder="chrome-wallet-ext" autocorrect="off" autocapitalize="off" spellcheck="false" />
+
+            <button type="submit" id="signupBtn">Create Workspace &amp; Mint API Key</button>
+          </form>
+          <p class="err" id="signupError" aria-live="polite"></p>
+        </div>
+
+        <!-- Sign In + Demo Account Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Sign In to Console</h2>
+            <span class="pill">Organization · Member · Individual</span>
+          </div>
+          <p class="lead">Paste your personal, invited team member, or organization <code>pf_live_…</code> API key to load your isolated workspace.</p>
+          <form id="loginForm" action="/v1/me" method="GET">
+            <label for="existingKey">Workspace API Key</label>
+            <div class="inline-row">
+              <input id="existingKey" name="apiKey" type="password" required placeholder="pf_live_…" autocomplete="current-password" autocorrect="off" autocapitalize="off" spellcheck="false" />
+              <button type="button" class="secondary" id="toggleKeyVisibility" aria-pressed="false" aria-label="Show API key">Show</button>
+            </div>
+            <button type="submit" id="useKey">Load Workspace Console</button>
+          </form>
+          <p class="err" id="gateError" aria-live="polite"></p>
+
+          <div class="card" id="demoCard" style="margin-top:1.5rem; background:#fff">
+            <div class="card-header">
+              <h2>Demo Account (Harbor Node)</h2>
+              <span class="pill ok-pill">Pre-seeded Tenant</span>
+            </div>
+            <p class="muted" style="margin-top:0">Want to explore the full authenticated Console Floor immediately? Use the pre-seeded <strong>Harbor</strong> demo tenant.</p>
+            <button type="button" class="secondary" id="useDemoBtn">Sign In with Demo Account</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 4. PUBLIC INTERACTIVE SANDBOX ==================== -->
+    <section id="view-sandbox" class="hidden">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2>Interactive Release Clearance Sandbox</h2>
+            <span class="muted">Test Harbor Node extension builds against live Rust static analysis agents — no signup required.</span>
+          </div>
+          <div>
+            <button type="button" class="row secondary" data-goto="auth" style="margin:0">Sign In for Persistent Projects →</button>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <!-- Sandbox Controls -->
+          <div>
+            <label>1. Pick a Harbor Node Extension Build Fixture</label>
+            <div>
+              <button type="button" class="row accent" data-sandbox-fixture="clean-relay">clean-relay (passes)</button>
+              <button type="button" class="row secondary" data-sandbox-fixture="extra-host">extra-host (undeclared host)</button>
+              <button type="button" class="row secondary" data-sandbox-fixture="broad-hosts">broad-hosts (*://*/*)</button>
+              <button type="button" class="row secondary" data-sandbox-fixture="remote-script">remote-script (eval + http)</button>
+            </div>
+
+            <form id="sandboxForm" action="/v1/sandbox/evaluate" method="POST">
+              <label for="sandboxClaims">2. Store &amp; Privacy Claims JSON (<code>claims.json</code> — editable)</label>
+              <textarea id="sandboxClaims" name="claims" spellcheck="false" style="min-height:165px"></textarea>
+              <div class="inline-row" style="margin-top:0.5rem">
+                <button type="submit" id="runSandboxBtn">Re-run Active Fixture with Edited Claims</button>
+                <button type="button" class="secondary" id="resetSandboxClaimsBtn">Reset Claims</button>
+              </div>
+            </form>
+            <p class="err" id="sandboxError" aria-live="polite"></p>
+          </div>
+
+          <!-- Sandbox Structured Agent Console Logs -->
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:0.4rem">
+              <label style="margin:0">Live Scanner Agent Console Logs</label>
+              <span class="mono muted" id="sandboxActiveLabel">fixture: clean-relay</span>
+            </div>
+            <div class="console-log" id="sandboxAgentLogs" tabindex="0" aria-live="polite">
+              <div class="muted">Select a sample build on the left to watch the 5 static analysis agents inspect it.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>Sandbox Verdict &amp; Findings</h2>
+          <div id="sandboxVerdictBadge"><span class="stamp pending">ready</span></div>
+        </div>
+        <div id="sandboxSummary" class="muted" style="margin-bottom:0.75rem">Click any fixture above to inspect its findings and inventory.</div>
+        <div id="sandboxFindings"></div>
+      </div>
+    </section>
+
+    <!-- ==================== 5. AUTHENTICATED CONSOLE FLOOR ==================== -->
+    <section id="view-console" class="hidden">
+      <!-- SignalDesk-style Workspace API Key Bar -->
+      <div class="workspace-bar">
+        <form id="switchWorkspaceForm" class="workspace-bar-left" action="/v1/me" method="GET">
+          <label for="consoleKeyInput">Workspace API Key:</label>
+          <input id="consoleKeyInput" name="apiKey" type="password" placeholder="pf_live_…" autocomplete="current-password" autocorrect="off" autocapitalize="off" spellcheck="false" style="max-width:310px" />
+          <button type="button" class="secondary small" id="toggleConsoleKeyBtn" aria-pressed="false">Show</button>
+          <button type="submit" class="accent small">Load Workspace</button>
+        </form>
+        <div style="display:flex; align-items:center; gap:0.55rem; flex-wrap:wrap">
+          <span class="pill" id="consoleAccountTypePill">ORG</span>
+          <span class="pill ok-pill" id="consoleActorPill">key: —</span>
+          <button type="button" class="secondary small" id="signOutBtn">Sign out</button>
+        </div>
+      </div>
+
+      <!-- 4 KPI Telemetry Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Latest Project Verdict</div>
+          <div class="kpi-value" id="kpiVerdict">—</div>
+          <div class="kpi-sub">Gate: auto_ship = false</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Isolated Projects</div>
+          <div class="kpi-value" id="kpiProjects">0</div>
+          <div class="kpi-sub" id="kpiActiveProject">Active: —</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Project Reviews</div>
+          <div class="kpi-value" id="kpiReviews">0</div>
+          <div class="kpi-sub" id="kpiReviewBreakdown">0 cleared · 0 blocked</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Scanner Engine &amp; Packs</div>
+          <div class="kpi-value">5 Agents</div>
+          <div class="kpi-sub">cws-2026.1 · node-client-2026.1</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <!-- Left Card: Artifact Ingestion & Project Claims -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Release Build Submission</h2>
+            <span class="pill">POST /v1/projects/:id/reviews</span>
+          </div>
+
+          <form id="uploadForm" action="/v1/reviews" method="POST">
+            <label for="project">Active Project (Isolated Baseline &amp; Claims)</label>
+            <select id="project" name="projectId"></select>
+
+            <label for="file">Extension Artifact (.zip / .crx)</label>
+            <input id="file" name="artifact" type="file" accept=".zip,.crx" />
+
+            <label for="claims">Project Claims JSON (<code>claims.json</code>)</label>
+            <textarea id="claims" name="claims" spellcheck="false" placeholder='{"purpose":"...","allowed_hosts":["api.example.com"],"privacy_url":"https://example.com/privacy"}'></textarea>
+
+            <div class="inline-row" style="margin-top:0.55rem">
+              <button type="submit" class="accent" id="upload">Review This Build</button>
+              <button type="button" class="secondary" id="saveClaims">Save Default Claims</button>
+            </div>
+          </form>
+
+          <label>Simulate Harbor Node Drops in Active Project</label>
+          <div>
+            <button type="button" class="row secondary" data-fixture="clean-relay">Simulate clean-relay</button>
+            <button type="button" class="row secondary" data-fixture="extra-host">Simulate extra-host (block)</button>
+            <button type="button" class="row secondary" data-fixture="broad-hosts">Simulate broad-hosts</button>
+            <button type="button" class="row secondary" data-fixture="remote-script">Simulate remote-script</button>
+          </div>
+
+          <div id="newProjectBox" style="margin-top:1rem; padding-top:0.85rem; border-top:1px solid var(--rule)">
+            <form id="newProjectForm" action="/v1/projects" method="POST">
+              <label for="newProjectName" style="margin-top:0">Create Additional Isolated Project</label>
+              <div class="inline-row">
+                <input id="newProjectName" name="name" required placeholder="e.g. brave-wallet-ext" autocorrect="off" autocapitalize="off" spellcheck="false" />
+                <button type="submit" class="secondary">+ Add Project</button>
+              </div>
+            </form>
+          </div>
+
+          <p class="err" id="error" aria-live="polite"></p>
+          <p class="ok" id="notice" aria-live="polite"></p>
+        </div>
+
+        <!-- Right Card: Live Agent Console Logs & Rust CLI Terminal Bridge -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Scanner Agent Console Logs &amp; CLI Bridge</h2>
+            <span class="pill" id="consoleReviewIdPill">no review selected</span>
+          </div>
+
+          <div class="console-log" id="consoleAgentLogs" tabindex="0" aria-live="polite">
+            <div class="muted">Upload an extension build or trigger a simulation to stream the 5 structured scanner agent logs.</div>
+          </div>
+
+          <div style="margin-top:1rem; padding-top:0.85rem; border-top:1px solid var(--rule)">
+            <div style="display:flex; justify-content:space-between; align-items:center">
+              <label style="margin:0">Use Your API Key in Terminal (Rust CLI)</label>
+              <button type="button" class="secondary small" id="copyCliCmdBtn">Copy CLI Command</button>
+            </div>
+            <pre tabindex="0"><code id="cliCommandPreview">cargo run -- push ./build.zip --project &lt;project-id&gt; --claims ./claims.json --key &lt;pf_live_key&gt;</code></pre>
+            <span class="mono muted" id="cliCopiedMsg" aria-live="polite"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Middle Card: Active Review Verdict, Findings & Human Sign-Off -->
+      <div class="card">
+        <div class="card-header">
+          <h2>Review Verdict, Findings &amp; Mandatory Human Sign-Off</h2>
+          <span class="pill">ADR-0003: Human Sign-Off Required</span>
+        </div>
+        <div id="status"><p class="muted">Select or run a review to inspect findings and sign off.</p></div>
+        <div id="findings" style="margin-top:0.75rem"></div>
+
+        <form id="signoff" class="hidden" action="/v1/reviews/sign-off" method="POST" style="margin-top:1rem; padding-top:1rem; border-top:1px solid var(--rule)">
+          <div class="grid-2">
+            <div>
+              <label for="reviewer" style="margin-top:0">Reviewer Name (Bound to Authenticated Key)</label>
+              <input id="reviewer" name="reviewer" required placeholder="Release Engineer" autocomplete="name" />
+            </div>
+            <div>
+              <label for="notes" style="margin-top:0">Sign-Off Notes</label>
+              <input id="notes" name="notes" placeholder="Verified against Chrome Web Store listing" />
+            </div>
+          </div>
+          <div style="margin-top:0.65rem">
+            <button type="button" class="row" data-decision="ship">Sign Off: Ship with Conditions</button>
+            <button type="button" class="row secondary" data-decision="hold">Hold Release</button>
+            <button type="button" class="row secondary" data-decision="reject">Reject Build</button>
+          </div>
+        </form>
+        <p id="ciSignoffNotice" class="muted hidden" style="margin-top:0.75rem">
+          Authenticated with a <strong>CI</strong> key. Automated pipelines can submit builds and verify verdicts, but human sign-off requires a <strong>reviewer</strong> or <strong>admin</strong> key.
+        </p>
+      </div>
+
+      <!-- Bottom Grid: Project Review History & Team Member / Key Rotation -->
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <h2>Project Review History</h2>
+            <span class="pill" id="historyProjectBadge">scoped to active project</span>
+          </div>
+          <div id="history" class="history muted">No reviews for this project yet.</div>
+        </div>
+
+        <div class="card" id="accessManagementCard">
+          <div class="card-header">
+            <h2 id="accessCardTitle">Team Members &amp; API Keys</h2>
+            <span class="pill" id="accessCardBadge">RBAC + Zero-Downtime Rotation</span>
+          </div>
+
+          <div id="adminControls">
+            <!-- Organization Member Invite Form (shown only for Organization accounts) -->
+            <form id="inviteMemberForm" action="/v1/members/invite" method="POST" style="margin-bottom:1.25rem; padding-bottom:1rem; border-bottom:1px solid var(--rule)">
+              <label style="margin-top:0">Invite User Under Organization (Mints Personal Member Key)</label>
+              <div class="grid-2" style="gap:0.5rem">
+                <div>
+                  <label for="inviteName" style="margin-top:0.25rem">Member Name</label>
+                  <input id="inviteName" name="name" required placeholder="Bob Security" autocomplete="name" />
+                </div>
+                <div>
+                  <label for="inviteEmail" style="margin-top:0.25rem">Member Email</label>
+                  <input id="inviteEmail" name="email" type="email" inputmode="email" required placeholder="bob@company.com" autocomplete="email" autocorrect="off" autocapitalize="off" spellcheck="false" />
+                </div>
+              </div>
+              <fieldset>
+                <legend>Member Role</legend>
+                <div class="radio-group">
+                  <label class="radio-option" for="inviteRoleReviewer">
+                    <input type="radio" id="inviteRoleReviewer" name="inviteRole" value="reviewer" checked />
+                    <span><strong>reviewer</strong> — can submit builds, edit claims &amp; sign off releases</span>
+                  </label>
+                  <label class="radio-option" for="inviteRoleAdmin">
+                    <input type="radio" id="inviteRoleAdmin" name="inviteRole" value="admin" />
+                    <span><strong>admin</strong> — full organization, project &amp; member management</span>
+                  </label>
+                  <label class="radio-option" for="inviteRoleCi">
+                    <input type="radio" id="inviteRoleCi" name="inviteRole" value="ci" />
+                    <span><strong>ci</strong> — automated pipeline (submit &amp; read only)</span>
+                  </label>
+                </div>
+              </fieldset>
+              <button type="submit" class="secondary">+ Invite Member &amp; Generate Key</button>
+            </form>
+
+            <!-- Personal / CI Key Rotation Form -->
+            <form id="mintKeyForm" action="/v1/keys" method="POST">
+              <label for="keyName" style="margin-top:0">Mint CLI / CI API Key</label>
+              <div class="inline-row">
+                <input id="keyName" name="name" required placeholder="label (e.g. laptop-cli or github-actions)" autocorrect="off" autocapitalize="off" spellcheck="false" />
+                <select id="mintRoleSelect" name="role" style="max-width:140px">
+                  <option value="ci">Role: ci</option>
+                  <option value="reviewer">Role: reviewer</option>
+                  <option value="admin">Role: admin</option>
+                </select>
+                <button type="submit" class="secondary">+ Mint Key</button>
+              </div>
+            </form>
+          </div>
+
+          <div id="keyList" style="margin-top:1rem"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Native Modal Dialog for One-Time API Key Reveal -->
+  <dialog id="keyModal">
+    <h1 id="keyModalTitle">Save Your API Key</h1>
+    <p class="lead" id="keyModalLead">This secret key is shown only once. Use it in the Web Console or with the Rust CLI in your terminal.</p>
+    <div class="keybox" id="onceKey"></div>
+    <p class="mono muted" style="margin:0.5rem 0 0.25rem">Terminal / Rust CLI usage:</p>
+    <pre tabindex="0"><code id="modalCliSnippet"></code></pre>
+    <div class="inline-row" style="margin-top:1rem">
+      <button type="button" class="accent" id="copyKey">Copy API Key</button>
+      <button type="button" class="secondary" id="enterApp">Open Workspace Console</button>
+    </div>
+    <p class="ok" id="copied" aria-live="polite"></p>
+  </dialog>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let currentId = null;
+    let currentSession = null;
+    let projectsById = new Map();
+    let defaultSampleClaims = null;
+    let currentSandboxFixture = "clean-relay";
+
+    function esc(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function renderAgentLogs(containerId, logs) {
+      const el = $(containerId);
+      if (!logs || !logs.length) {
+        el.innerHTML = '<div class="muted">No agent logs available yet.</div>';
+        return;
+      }
+      el.innerHTML = logs.map((entry) => `
+        <div class="log-row">
+          <div>
+            <span class="log-tag ${esc(entry.status)}">${esc(entry.status)}</span>
+            <strong>[${esc(entry.agentId)}]</strong> ${esc(entry.name)}
+            <span class="muted">(${esc(entry.module)})</span>
+          </div>
+          <div style="margin-top:0.2rem">${esc(entry.headline)}</div>
+          <div class="muted" style="margin-top:0.1rem">${esc(entry.detail)}</div>
+        </div>
+      `).join("");
+    }
+
+    function renderFindingsTable(containerId, findings, status) {
+      const el = $(containerId);
+      if (!findings || !findings.length) {
+        el.innerHTML = status === "completed"
+          ? "<p class='muted'>No policy violations found. Mandatory human sign-off still applies.</p>"
+          : "<p class='muted'>Waiting on scanner agents…</p>";
+        return;
+      }
+      el.innerHTML = "<table><thead><tr><th>ID</th><th>Severity</th><th>Pack</th><th>File</th><th>Finding</th></tr></thead><tbody>" +
+        findings.map((f) =>
+          `<tr><td>${esc(f.id)}</td><td><span class="stamp ${esc(f.severity === "blocker" || f.severity === "high" ? "block" : "warn")}">${esc(f.severity)}</span></td><td>${esc(f.pack)}</td><td>${esc(f.file)}</td><td><strong>${esc(f.title)}</strong><br><span class="muted">${esc(f.summary)}</span></td></tr>`
+        ).join("") + "</tbody></table>";
+    }
+
+    // Navigation controller
+    const VIEWS = ["home", "docs", "auth", "sandbox", "console"];
+    function switchView(target) {
+      if (target === "console" && !currentSession) {
+        target = "auth";
+      }
+      VIEWS.forEach((v) => {
+        const sec = $("view-" + v);
+        if (sec) sec.classList.toggle("hidden", v !== target);
+      });
+      document.querySelectorAll("[data-nav]").forEach((btn) => {
+        if (btn.dataset.nav === target) {
+          btn.setAttribute("aria-current", "page");
+        } else {
+          btn.removeAttribute("aria-current");
+        }
+      });
+      if (target === "sandbox" && !$("sandboxClaims").value.trim() && defaultSampleClaims) {
+        $("sandboxClaims").value = JSON.stringify(defaultSampleClaims, null, 2);
+        runSandboxEvaluation(currentSandboxFixture);
+      }
+    }
+
+    document.querySelectorAll("[data-nav]").forEach((btn) => {
+      btn.addEventListener("click", () => switchView(btn.dataset.nav));
+    });
+    document.querySelectorAll("[data-goto]").forEach((btn) => {
+      btn.addEventListener("click", () => switchView(btn.dataset.goto));
+    });
+    $("brandHome").addEventListener("click", (e) => {
+      e.preventDefault();
+      switchView("home");
+    });
+    $("headerSandboxBtn").addEventListener("click", () => switchView("sandbox"));
+
+    // Account Type radio toggle on Sign Up
+    document.querySelectorAll('input[name="accountType"]').forEach((radio) => {
+      radio.addEventListener("change", updateSignupAccountMode);
+    });
+    document.querySelectorAll("[data-signup-mode]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const mode = btn.dataset.signupMode;
+        const radio = document.querySelector(`input[name="accountType"][value="${mode}"]`);
+        if (radio) radio.checked = true;
+        updateSignupAccountMode();
+        switchView("auth");
+      });
+    });
+
+    function updateSignupAccountMode() {
+      const mode = document.querySelector('input[name="accountType"]:checked')?.value || "organization";
+      const isInd = mode === "individual";
+      $("orgNameGroup").classList.toggle("hidden", isInd);
+      $("orgName").required = !isInd;
+      $("actorNameLabel").textContent = isInd
+        ? "Your Name or Handle (Personal Workspace)"
+        : "Your Name / Handle (Organization Admin)";
+      $("signupBtn").textContent = isInd
+        ? "Create Individual Workspace & Mint Key"
+        : "Create Organization & Mint Admin Key";
+    }
+    updateSignupAccountMode();
+
+    // Load metadata + Demo key availability
+    fetch("/v1/meta").then((r) => r.json()).then((m) => {
+      if (m.sampleClaims) {
+        defaultSampleClaims = m.sampleClaims;
+        $("sandboxClaims").value = JSON.stringify(m.sampleClaims, null, 2);
+      }
+      if (m.demo && m.demoKey) {
+        $("homeDemoBtn").classList.remove("hidden");
+        $("homeDemoBtn").addEventListener("click", () => enterWorkspace(m.demoKey, true));
+        $("useDemoBtn").addEventListener("click", () => enterWorkspace(m.demoKey, true));
+      } else {
+        $("demoCard").classList.add("hidden");
+      }
+    }).catch(() => {});
+
+    // Auto-restore saved session key
+    const saved = localStorage.getItem("pf_key");
+    if (saved) {
+      enterWorkspace(saved, false);
+    }
+
+    // Password unmask toggles
+    $("toggleKeyVisibility").addEventListener("click", () => {
+      const input = $("existingKey");
+      const showing = input.type === "text";
+      input.type = showing ? "password" : "text";
+      $("toggleKeyVisibility").setAttribute("aria-pressed", String(!showing));
+      $("toggleKeyVisibility").textContent = showing ? "Show" : "Hide";
+    });
+    $("toggleConsoleKeyBtn").addEventListener("click", () => {
+      const input = $("consoleKeyInput");
+      const showing = input.type === "text";
+      input.type = showing ? "password" : "text";
+      $("toggleConsoleKeyBtn").setAttribute("aria-pressed", String(!showing));
+      $("toggleConsoleKeyBtn").textContent = showing ? "Show" : "Hide";
+    });
+
+    // Public Sandbox Handlers
+    document.querySelectorAll("[data-sandbox-fixture]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        currentSandboxFixture = btn.dataset.sandboxFixture;
+        document.querySelectorAll("[data-sandbox-fixture]").forEach((b) => {
+          b.classList.toggle("accent", b === btn);
+          b.classList.toggle("secondary", b !== btn);
+        });
+        runSandboxEvaluation(currentSandboxFixture);
+      });
+    });
+
+    $("sandboxForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      runSandboxEvaluation(currentSandboxFixture);
+    });
+
+    $("resetSandboxClaimsBtn").addEventListener("click", () => {
+      if (defaultSampleClaims) {
+        $("sandboxClaims").value = JSON.stringify(defaultSampleClaims, null, 2);
+        runSandboxEvaluation(currentSandboxFixture);
+      }
+    });
+
+    async function runSandboxEvaluation(fixture) {
+      $("sandboxError").textContent = "";
+      $("sandboxActiveLabel").textContent = `fixture: ${fixture}`;
+      let claims;
+      const raw = $("sandboxClaims").value.trim();
+      if (raw) {
+        try {
+          claims = JSON.parse(raw);
+        } catch {
+          $("sandboxError").textContent = "Sandbox claims must be valid JSON.";
+          return;
+        }
+      }
+      const res = await fetch("/v1/sandbox/evaluate", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ fixture, claims }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        $("sandboxError").textContent = body.message || res.statusText;
+        return;
+      }
+      $("sandboxVerdictBadge").innerHTML = `<span class="stamp ${esc(body.verdict)}">${esc(body.verdict)}</span>`;
+      $("sandboxSummary").innerHTML = `<strong>${esc(body.artifactName)}</strong> · sha256:${esc((body.artifactSha256 || "").slice(0, 12))}… · ${esc(body.findingCount)} finding(s) · <code>auto_ship: false</code>`;
+      renderAgentLogs("sandboxAgentLogs", body.pipelineLogs);
+      renderFindingsTable("sandboxFindings", body.findings, body.status);
+    }
+
+    // Sign Up & Key Modal
+    function showKeyModal(plaintext, title, lead, switchSessionKey) {
+      $("keyModalTitle").textContent = title;
+      $("keyModalLead").textContent = lead;
+      $("onceKey").textContent = plaintext;
+      const projId = $("project").value || "<project-id>";
+      $("modalCliSnippet").textContent =
+        `cargo run -- review fixtures/harbor-node/clean-relay --claims fixtures/harbor-node/claims.json --key ${plaintext}\n` +
+        `cargo run -- push ./extension.zip --project ${projId} --claims ./claims.json --key ${plaintext}`;
+      $("copied").textContent = "";
+      if (switchSessionKey) {
+        localStorage.setItem("pf_key", plaintext);
+      }
+      const dlg = $("keyModal");
+      if (typeof dlg.showModal === "function") {
+        dlg.showModal();
+      }
+    }
+
+    $("signupForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      $("signupError").textContent = "";
+      const accountType = document.querySelector('input[name="accountType"]:checked')?.value || "organization";
+      const res = await fetch("/v1/signup", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          accountType,
+          organization: $("orgName").value,
+          actorName: $("actorName").value,
+          email: $("signupEmail").value,
+          project: $("projectName").value,
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        $("signupError").textContent = body.message || res.statusText;
+        return;
+      }
+      await enterWorkspace(body.apiKey.plaintext, true);
+      showKeyModal(
+        body.apiKey.plaintext,
+        accountType === "individual" ? "Your Personal API Key" : "Your Organization Admin API Key",
+        "Store this key now — it is shown only once. Use it in the Web Console or with the Rust CLI in your terminal.",
+        true,
+      );
+    });
+
+    $("copyKey").addEventListener("click", async () => {
+      await navigator.clipboard.writeText($("onceKey").textContent);
+      $("copied").textContent = "Copied API key to clipboard.";
+    });
+
+    $("enterApp").addEventListener("click", () => {
+      const dlg = $("keyModal");
+      if (dlg && typeof dlg.close === "function") dlg.close();
+      switchView("console");
+    });
+
+    $("loginForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      enterWorkspace($("existingKey").value.trim(), true);
+    });
+
+    $("switchWorkspaceForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      enterWorkspace($("consoleKeyInput").value.trim(), true);
+    });
+
+    $("signOutBtn").addEventListener("click", () => {
+      localStorage.removeItem("pf_key");
+      currentSession = null;
+      $("headerContext").textContent = "Chromium Extension Release Clearance";
+      $("navAuthBtn").textContent = "Login / Sign Up";
+      switchView("home");
+    });
+
+    function headers(key) {
+      const k = key || localStorage.getItem("pf_key") || "";
+      return { Authorization: "Bearer " + k };
+    }
+
+    function updateCliPreview() {
+      const key = localStorage.getItem("pf_key") || "<pf_live_key>";
+      const projId = $("project").value || "<project-id>";
+      $("cliCommandPreview").textContent =
+        `# Local deterministic Rust scan with your key:\n` +
+        `cargo run -- review ./extension.zip --claims ./claims.json --key ${key}\n\n` +
+        `# Push build from terminal straight to this Console project (${projId}):\n` +
+        `cargo run -- push ./extension.zip --project ${projId} --claims ./claims.json --key ${key} --api ${location.origin}`;
+    }
+
+    $("copyCliCmdBtn").addEventListener("click", async () => {
+      await navigator.clipboard.writeText($("cliCommandPreview").textContent);
+      $("cliCopiedMsg").textContent = "Copied CLI commands.";
+      setTimeout(() => { $("cliCopiedMsg").textContent = ""; }, 2500);
+    });
+
+    function syncProjectClaimsInput() {
+      const proj = projectsById.get($("project").value);
+      if (proj && proj.defaultClaims) {
+        $("claims").value = JSON.stringify(proj.defaultClaims, null, 2);
+      } else {
+        $("claims").value = "";
+      }
+      if (proj) {
+        $("kpiActiveProject").textContent = `Active: ${proj.slug}`;
+        $("historyProjectBadge").textContent = `project: ${proj.slug}`;
+      }
+      updateCliPreview();
+    }
+
+    async function enterWorkspace(key, navigateToConsole = true) {
+      if (!key) {
+        $("gateError").textContent = "Paste a valid pf_live_ API key.";
+        return;
+      }
+      const res = await fetch("/v1/me", { headers: headers(key) });
+      if (!res.ok) {
+        $("gateError").textContent = "Invalid or revoked API key.";
+        return;
+      }
+      localStorage.setItem("pf_key", key);
+      $("consoleKeyInput").value = key;
+      $("existingKey").value = key;
+      const me = await res.json();
+      currentSession = me;
+      projectsById = new Map(me.projects.map((p) => [p.id, p]));
+
+      const isInd = me.organization.accountType === "individual";
+      $("consoleAccountTypePill").textContent = isInd ? "INDIVIDUAL WORKSPACE" : "ORGANIZATION WORKSPACE";
+      const keyInfo = me.currentKey
+        ? `${me.currentKey.name} (${me.currentKey.role} · ${me.currentKey.prefix})`
+        : "authenticated";
+      $("consoleActorPill").textContent = keyInfo;
+      $("headerContext").textContent = `${me.organization.name} (${me.organization.slug}) · ${me.currentKey?.role || "admin"}`;
+      $("navAuthBtn").textContent = "Switch Account";
+
+      if (me.currentKey && me.currentKey.role !== "ci") {
+        $("reviewer").value = me.currentKey.name;
+      }
+
+      const isAdmin = !me.currentKey || me.currentKey.role === "admin";
+      $("adminControls").classList.toggle("hidden", !isAdmin);
+      $("newProjectBox").classList.toggle("hidden", !isAdmin);
+      $("saveClaims").classList.toggle("hidden", me.currentKey?.role === "ci");
+      $("inviteMemberForm").classList.toggle("hidden", isInd);
+      $("accessCardTitle").textContent = isInd
+        ? "Personal CLI & CI API Keys"
+        : "Organization Members & API Keys";
+
+      const prevProj = $("project").value;
+      $("project").innerHTML = me.projects
+        .map((p) => `<option value="${esc(p.id)}">${esc(p.name)} (${esc(p.slug)})</option>`)
+        .join("");
+      if (prevProj && projectsById.has(prevProj)) {
+        $("project").value = prevProj;
+      }
+      $("kpiProjects").textContent = String(me.projects.length);
+      syncProjectClaimsInput();
+
+      if (navigateToConsole) {
+        switchView("console");
+      }
+      await refreshHistory();
+      if (isAdmin) await refreshKeys();
+    }
+
+    $("project").addEventListener("change", () => {
+      syncProjectClaimsInput();
+      currentId = null;
+      $("status").innerHTML = '<p class="muted">Switched project. Select a review below or submit a new build.</p>';
+      $("findings").innerHTML = "";
+      $("signoff").classList.add("hidden");
+      refreshHistory();
+    });
+
+    $("saveClaims").addEventListener("click", async () => {
+      $("error").textContent = "";
+      $("notice").textContent = "";
+      const raw = $("claims").value.trim();
+      let parsed = null;
+      if (raw) {
+        try {
+          parsed = JSON.parse(raw);
+        } catch {
+          $("error").textContent = "Claims must be valid JSON.";
+          return;
+        }
+      }
+      const projectId = $("project").value;
+      const res = await fetch("/v1/projects/" + projectId + "/claims", {
+        method: "PUT",
+        headers: { ...headers(), "content-type": "application/json" },
+        body: JSON.stringify({ claims: parsed }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        $("error").textContent = body.message || res.statusText;
+        return;
+      }
+      projectsById.set(projectId, body);
+      $("notice").textContent = `Saved default claims for project ${body.slug}.`;
+    });
+
+    $("newProjectForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      $("error").textContent = "";
+      $("notice").textContent = "";
+      const name = $("newProjectName").value.trim();
+      if (!name) return;
+      const res = await fetch("/v1/projects", {
+        method: "POST",
+        headers: { ...headers(), "content-type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        $("error").textContent = body.message || res.statusText;
+        return;
+      }
+      $("newProjectName").value = "";
+      projectsById.set(body.id, body);
+      const opt = document.createElement("option");
+      opt.value = body.id;
+      opt.textContent = `${body.name} (${body.slug})`;
+      $("project").appendChild(opt);
+      $("project").value = body.id;
+      $("kpiProjects").textContent = String(projectsById.size);
+      syncProjectClaimsInput();
+      refreshHistory();
+      $("notice").textContent = `Created isolated project ${body.slug}.`;
+    });
+
+    $("uploadForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      $("error").textContent = "";
+      $("notice").textContent = "";
+      const file = $("file").files[0];
+      if (!file) {
+        $("error").textContent = "Choose a .zip or .crx artifact file first.";
+        return;
+      }
+      const data = new FormData();
+      data.append("artifact", file);
+      const claims = $("claims").value.trim();
+      if (claims) data.append("claims", claims);
+      const res = await fetch("/v1/projects/" + $("project").value + "/reviews", {
+        method: "POST",
+        headers: headers(),
+        body: data,
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        $("error").textContent = body.message || res.statusText;
+        return;
+      }
+      poll(body.id);
+    });
+
+    document.querySelectorAll("[data-fixture]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        $("error").textContent = "";
+        $("notice").textContent = "";
+        const res = await fetch("/v1/reviews/demo", {
+          method: "POST",
+          headers: { ...headers(), "content-type": "application/json" },
+          body: JSON.stringify({ fixture: btn.dataset.fixture, projectId: $("project").value }),
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          $("error").textContent = body.message || res.statusText;
+          return;
+        }
+        poll(body.id);
+      });
+    });
+
+    $("inviteMemberForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      $("error").textContent = "";
+      const role = document.querySelector('input[name="inviteRole"]:checked')?.value || "reviewer";
+      const res = await fetch("/v1/members/invite", {
+        method: "POST",
+        headers: { ...headers(), "content-type": "application/json" },
+        body: JSON.stringify({
+          name: $("inviteName").value,
+          email: $("inviteEmail").value,
+          role,
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        $("error").textContent = body.message || res.statusText;
+        return;
+      }
+      $("inviteName").value = "";
+      $("inviteEmail").value = "";
+      await refreshKeys();
+      showKeyModal(
+        body.plaintext,
+        `Invited ${body.name} (${body.role})`,
+        `Share this personal API key with ${body.email || body.name}. It grants ${body.role} access to your organization in both the Web Console and the Rust CLI.`,
+        false,
+      );
+    });
+
+    $("mintKeyForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      $("error").textContent = "";
+      const role = $("mintRoleSelect").value;
+      const res = await fetch("/v1/keys", {
+        method: "POST",
+        headers: { ...headers(), "content-type": "application/json" },
+        body: JSON.stringify({ name: $("keyName").value || role, role }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        $("error").textContent = body.message || res.statusText;
+        return;
+      }
+      $("keyName").value = "";
+      await refreshKeys();
+      showKeyModal(
+        body.plaintext,
+        `Minted ${body.role.toUpperCase()} Key (${body.name})`,
+        "Copy this key now — it will not be shown again. Use it with the Rust CLI or CI pipeline.",
+        false,
+      );
+    });
+
+    async function refreshKeys() {
+      const res = await fetch("/v1/keys", { headers: headers() });
+      if (!res.ok) return;
+      const keys = await res.json();
+      $("keyList").innerHTML = "<table><thead><tr><th>Member / Label</th><th>Role</th><th>Prefix</th><th>State</th><th>Action</th></tr></thead><tbody>" +
+        keys.map((k) => {
+          const isCurrent = currentSession?.currentKey?.id === k.id;
+          const emailSub = k.email ? `<br><span class="muted">${esc(k.email)}</span>` : "";
+          const stateBadge = k.revoked
+            ? '<span class="pill block-pill">revoked</span>'
+            : isCurrent
+              ? '<span class="pill ok-pill">current</span>'
+              : '<span class="pill">active</span>';
+          const action = k.revoked || isCurrent
+            ? "—"
+            : `<button type="button" class="secondary small" data-revoke="${esc(k.id)}">Revoke</button>`;
+          return `<tr><td><strong>${esc(k.name)}</strong>${emailSub}</td><td>${esc(k.role)}</td><td>${esc(k.prefix)}</td><td>${stateBadge}</td><td>${action}</td></tr>`;
+        }).join("") + "</tbody></table>";
+      $("keyList").querySelectorAll("[data-revoke]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const r = await fetch("/v1/keys/" + btn.dataset.revoke + "/revoke", {
+            method: "POST",
+            headers: headers(),
+          });
+          if (r.ok) refreshKeys();
+        });
+      });
+    }
+
+    async function poll(id) {
+      currentId = id;
+      const tick = async () => {
+        const res = await fetch("/v1/reviews/" + id, { headers: headers() });
+        if (!res.ok) return;
+        const review = await res.json();
+        render(review);
+        refreshHistory();
+        if (review.status === "queued" || review.status === "running") {
+          setTimeout(tick, 750);
+        }
+      };
+      tick();
+    }
+
+    async function refreshHistory() {
+      const projectId = $("project").value;
+      const url = projectId ? "/v1/reviews?projectId=" + encodeURIComponent(projectId) : "/v1/reviews";
+      const res = await fetch(url, { headers: headers() });
+      if (!res.ok) return;
+      const rows = await res.json();
+      $("kpiReviews").textContent = String(rows.length);
+      const blockedCount = rows.filter((r) => r.verdict === "block").length;
+      const clearedCount = rows.filter((r) => r.verdict === "ship_with_conditions").length;
+      $("kpiReviewBreakdown").textContent = `${clearedCount} cleared · ${blockedCount} blocked`;
+      if (rows[0]) {
+        $("kpiVerdict").textContent = rows[0].verdict || rows[0].status;
+      } else {
+        $("kpiVerdict").textContent = "—";
+      }
+
+      if (!rows.length) {
+        $("history").textContent = "No reviews for this project yet.";
+        return;
+      }
+      $("history").innerHTML = "<table><thead><tr><th>Time</th><th>Artifact</th><th>Submitted By</th><th>Verdict</th><th>Sign-Off</th></tr></thead><tbody>" +
+        rows.map((r) => {
+          const v = r.verdict || r.status;
+          const sign = r.signOffDecision ? `${esc(r.signOffDecision)} (${esc(r.signedOffBy || "")})` : "—";
+          return `<tr><td>${esc(new Date(r.createdAt).toLocaleTimeString())}</td><td><button type="button" class="secondary small" data-id="${esc(r.id)}">${esc(r.artifactName)}</button></td><td>${esc(r.submittedBy || "—")}</td><td><span class="stamp ${esc(v)}">${esc(v)}</span></td><td>${sign}</td></tr>`;
+        }).join("") + "</tbody></table>";
+      $("history").querySelectorAll("button[data-id]").forEach((btn) => {
+        btn.addEventListener("click", () => poll(btn.dataset.id));
+      });
+      if (!currentId && rows[0]) {
+        poll(rows[0].id);
+      }
+    }
+
+    document.querySelectorAll("#signoff [data-decision]").forEach((btn) => {
+      btn.addEventListener("click", () => signOff(btn.dataset.decision));
+    });
+
+    async function signOff(decision) {
+      if (!currentId) return;
+      $("error").textContent = "";
+      const res = await fetch("/v1/reviews/" + currentId + "/sign-off", {
+        method: "POST",
+        headers: { ...headers(), "content-type": "application/json" },
+        body: JSON.stringify({
+          reviewer: $("reviewer").value,
+          notes: $("notes").value,
+          decision,
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        $("error").textContent = body.message || res.statusText;
+        return;
+      }
+      render(body);
+      refreshHistory();
+    }
+
+    function render(review) {
+      currentId = review.id;
+      $("consoleReviewIdPill").textContent = `review: ${review.id.slice(0, 8)}…`;
+      const stamp = review.verdict || review.status;
+      $("kpiVerdict").textContent = stamp;
+
+      renderAgentLogs("consoleAgentLogs", review.pipelineLogs);
+
+      const submittedBy = review.submittedBy ? ` · submitted by <strong>${esc(review.submittedBy)}</strong>` : "";
+      let html = `<div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap">
+        <span class="stamp ${esc(stamp)}">${esc(stamp)}</span>
+        <span><strong>${esc(review.artifactName)}</strong> · sha256:${esc((review.artifactSha256 || "").slice(0, 12))}…${submittedBy} · <code>auto_ship: false</code></span>
+      </div>`;
+      if (review.signOff) {
+        html += `<p class="ok" style="margin-top:0.6rem">Signed off by <strong>${esc(review.signOff.reviewer)}</strong>: <span class="stamp ${esc(review.signOff.decision)}">${esc(review.signOff.decision)}</span> — ${esc(review.signOff.notes || "No notes")}</p>`;
+      }
+      $("status").innerHTML = html;
+
+      const isCi = currentSession?.currentKey?.role === "ci";
+      const canShowSignoff = review.status === "completed" && !review.signOff;
+      $("signoff").classList.toggle("hidden", !canShowSignoff || isCi);
+      $("ciSignoffNotice").classList.toggle("hidden", !canShowSignoff || !isCi);
+
+      if (review.error) {
+        $("findings").innerHTML = `<p class="err">${esc(review.error)}</p>`;
+        return;
+      }
+      renderFindingsTable("findings", review.findings, review.status);
+    }
+  </script>
+</body>
+</html>

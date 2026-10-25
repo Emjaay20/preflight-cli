@@ -1,0 +1,108 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x", "linux-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id          String     @id @default(cuid())
+  name        String
+  slug        String     @unique
+  accountType String     @default("organization")
+  createdAt   DateTime   @default(now())
+  projects    Project[]
+  apiKeys     ApiKey[]
+}
+
+model ApiKey {
+  id             String         @id @default(cuid())
+  organizationId String
+  organization   Organization   @relation(fields: [organizationId], references: [id])
+  name           String
+  email          String?
+  role           String         @default("admin")
+  prefix         String         @unique
+  hash           String
+  createdAt      DateTime       @default(now())
+  lastUsedAt     DateTime?
+  revokedAt      DateTime?
+}
+
+
+model Project {
+  id             String         @id @default(cuid())
+  organizationId String
+  organization   Organization   @relation(fields: [organizationId], references: [id])
+  name           String
+  slug           String
+  defaultClaims  Json?
+  createdAt      DateTime       @default(now())
+  reviews        Review[]
+  @@unique([organizationId, slug])
+}
+
+enum ReviewStatus {
+  queued
+  running
+  completed
+  failed
+}
+
+model Review {
+  id              String         @id
+  projectId       String
+  project         Project        @relation(fields: [projectId], references: [id])
+  status          ReviewStatus
+  verdict         String?
+  artifactName    String
+  artifactSha256  String
+  artifactPath    String
+  claims          Json?
+  packs           String[]
+  submittedBy     String?
+  inventory       Json?
+  report          Json?
+  markdown        String?
+  error           String?
+  createdAt       DateTime
+  startedAt       DateTime?
+  completedAt     DateTime?
+  signedOffAt     DateTime?
+  signedOffBy     String?
+  signOffDecision String?
+  signOffNotes    String?
+  findings        Finding[]
+  outbox          OutboxEvent[]
+}
+
+
+model Finding {
+  id         String   @id @default(cuid())
+  reviewId   String
+  review     Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  findingKey String
+  controlId  String
+  pack       String
+  severity   String
+  file       String
+  field      String
+  line       Int
+  snippet    String
+  title      String
+  summary    String
+}
+
+model OutboxEvent {
+  id          String    @id @default(cuid())
+  reviewId    String?
+  review      Review?   @relation(fields: [reviewId], references: [id], onDelete: SetNull)
+  type        String
+  payload     Json
+  createdAt   DateTime  @default(now())
+  publishedAt DateTime?
+  slackPublishedAt DateTime?
+}

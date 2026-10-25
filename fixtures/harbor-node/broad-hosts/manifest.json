@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Harbor Node",
+  "version": "1.3.0",
+  "description": "Relay unused bandwidth.",
+  "permissions": ["storage", "tabs"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "icon.png"
+  }
+}

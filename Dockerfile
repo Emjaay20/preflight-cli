@@ -1,29 +1,19 @@
 FROM rust:1.75-slim AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Copy Cargo manifest and source code
-COPY Cargo.toml Cargo.lock .
+COPY Cargo.toml ./
 COPY src ./src
 
-# Install any needed system dependencies for building
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends libssl-dev pkg-config && \
-    rm -rf /var/lib/apt/lists/*
+RUN cargo generate-lockfile && cargo build --release
 
-# Build the binary in release mode
-RUN cargo build --release && \
-    strip target/release/preflight-cli
-
-# ---- Runtime image ----
 FROM debian:bookworm-slim
 
-# Copy the compiled binary from the builder stage
-COPY --from=builder /app/target/release/preflight-cli /usr/local/bin/preflight-cli
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends unzip ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
 
-# Ensure the binary is executable
-RUN chmod +x /usr/local/bin/preflight-cli
+COPY --from=builder /app/target/release/preflight /usr/local/bin/preflight
+RUN ln -s preflight /usr/local/bin/preflight-cli
 
-# Set the entrypoint
-ENTRYPOINT ["preflight-cli"]
+ENTRYPOINT ["preflight"]

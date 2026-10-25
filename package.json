@@ -1,0 +1,27 @@
+{
+  "name": "preflight",
+  "private": true,
+  "version": "0.2.0",
+  "description": "Release-clearance platform for Chromium extension builds",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "test": "npm test --workspaces --if-present",
+    "test:domain": "npm test -w @preflight/domain",
+    "test:scanner": "npm test -w @preflight/scanner",
+    "test:platform": "npm test -w @preflight/platform",
+    "test:rust": "cargo test",
+    "build": "npm run build -ws --if-present",
+    "lint": "npm run lint -ws --if-present",
+    "prisma:generate": "npm run prisma:generate -w @preflight/platform",
+    "prisma:migrate": "npm run prisma:migrate -w @preflight/platform",
+    "prisma:seed": "npm run prisma:seed -w @preflight/platform",
+    "dev:api": "npm run start:dev -w @preflight/platform",
+    "dev:worker": "npm run start:worker -w @preflight/platform"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

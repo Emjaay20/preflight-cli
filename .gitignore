@@ -1,3 +1,9 @@
 node_modules/
 .env
 .DS_Store
+/target
+/reviews
+/data
+dist/
+*.log
+apps/platform/generated/

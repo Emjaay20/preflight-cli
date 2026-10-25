@@ -1,0 +1,20 @@
+{
+  "purpose": "Relay unused bandwidth to first-party Harbor relays after explicit user consent.",
+  "listing": "Harbor Node shares unused bandwidth only with Harbor-operated relays after you opt in. You can stop sharing at any time.",
+  "privacy_url": "https://harbor.example/privacy",
+  "allowed_hosts": [
+    "relay.harbor.example",
+    "updates.harbor.example",
+    "harbor.example"
+  ],
+  "permission_purposes": {
+    "storage": "Persist consent and kill-switch state on device.",
+    "alarms": "Schedule relay heartbeats only after consent."
+  },
+  "consent_flow": "Options page requires explicit opt-in before any socket opens. Relay code returns immediately when consent is not true.",
+  "kill_switch": "A runtime message harbor:kill closes the relay socket and stops further connections.",
+  "first_party_hosts": [
+    "harbor.example"
+  ],
+  "update_url": "https://updates.harbor.example/updates.xml"
+}
