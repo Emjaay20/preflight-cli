@@ -69,5 +69,5 @@ jobs:
           target: api
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/preflight-platform:latest
-            ghcr.io/${{ github.repository_owner }}/preflight-platform:${{ github.sha }}
+            ghcr.io/emjaay20/preflight-platform:latest
+            ghcr.io/emjaay20/preflight-platform:${{ github.sha }}
