@@ -1,0 +1,133 @@
+name: Preflight extension review
+description: Submit a Chromium extension build to Preflight and turn its verdict into a GitHub check.
+author: Preflight
+
+inputs:
+  preflight-url:
+    description: Base URL for your Preflight deployment, for example https://preflight.example.com.
+    required: true
+  api-key:
+    description: A Preflight API key with the ci role.
+    required: true
+  project-id:
+    description: Preflight project ID that owns this extension.
+    required: true
+  artifact:
+    description: Path to the extension ZIP or CRX produced by this workflow.
+    required: true
+  claims:
+    description: Optional path to a JSON claims file. When omitted, the project's approved default claims are used.
+    required: false
+    default: ""
+  timeout-seconds:
+    description: Maximum time to wait for an asynchronous review.
+    required: false
+    default: "180"
+  fail-on:
+    description: Comma-separated verdicts that should fail the GitHub check.
+    required: false
+    default: block,needs_human
+
+outputs:
+  review-id:
+    description: The created Preflight review ID.
+    value: ${{ steps.review.outputs.review-id }}
+  verdict:
+    description: "Final verdict: block, needs_human, or ship_with_conditions."
+    value: ${{ steps.review.outputs.verdict }}
+  report-url:
+    description: URL for the full review report.
+    value: ${{ steps.review.outputs.report-url }}
+
+runs:
+  using: composite
+  steps:
+    - id: review
+      shell: bash
+      env:
+        INPUT_PREFLIGHT_URL: ${{ inputs.preflight-url }}
+        INPUT_API_KEY: ${{ inputs.api-key }}
+        INPUT_PROJECT_ID: ${{ inputs.project-id }}
+        INPUT_ARTIFACT: ${{ inputs.artifact }}
+        INPUT_CLAIMS: ${{ inputs.claims }}
+        INPUT_TIMEOUT_SECONDS: ${{ inputs.timeout-seconds }}
+        INPUT_FAIL_ON: ${{ inputs.fail-on }}
+      run: |
+        set -euo pipefail
+
+        base_url="${INPUT_PREFLIGHT_URL%/}"
+        if [[ ! -f "$INPUT_ARTIFACT" ]]; then
+          echo "Preflight artifact was not found: $INPUT_ARTIFACT" >&2
+          exit 1
+        fi
+        if ! [[ "$INPUT_TIMEOUT_SECONDS" =~ ^[1-9][0-9]*$ ]]; then
+          echo "timeout-seconds must be a positive integer" >&2
+          exit 1
+        fi
+
+        form_args=(
+          --form "artifact=@${INPUT_ARTIFACT}"
+        )
+        if [[ -n "$INPUT_CLAIMS" ]]; then
+          if [[ ! -f "$INPUT_CLAIMS" ]]; then
+            echo "Preflight claims file was not found: $INPUT_CLAIMS" >&2
+            exit 1
+          fi
+          claims_json="$(jq -ce . "$INPUT_CLAIMS")"
+          form_args+=(--form "claims=${claims_json}")
+        fi
+
+        response="$(curl --fail-with-body --silent --show-error --retry 2 --connect-timeout 10 --max-time 60 \
+          -X POST \
+          -H "Authorization: Bearer ${INPUT_API_KEY}" \
+          "${form_args[@]}" \
+          "${base_url}/v1/projects/${INPUT_PROJECT_ID}/reviews")"
+        review_id="$(jq -er '.id' <<<"$response")"
+        echo "review-id=${review_id}" >> "$GITHUB_OUTPUT"
+
+        deadline=$((SECONDS + INPUT_TIMEOUT_SECONDS))
+        while (( SECONDS < deadline )); do
+          review="$(curl --fail-with-body --silent --show-error --retry 2 --connect-timeout 10 --max-time 60 \
+            -H "Authorization: Bearer ${INPUT_API_KEY}" \
+            "${base_url}/v1/reviews/${review_id}")"
+          status="$(jq -er '.status' <<<"$review")"
+          verdict="$(jq -r '.verdict // empty' <<<"$review")"
+          echo "Preflight review ${review_id}: ${status}${verdict:+ (${verdict})}"
+
+          if [[ "$status" == "completed" ]]; then
+            report_url="${base_url}/v1/reviews/${review_id}/markdown"
+            {
+              echo "## Preflight release review"
+              echo
+              echo "- **Verdict:** \`${verdict}\`"
+              echo "- **Review:** \`${review_id}\`"
+              echo "- **Report:** ${report_url} (requires your Preflight API key)"
+              echo
+              echo '```json'
+              jq '{status, verdict, findingCount, artifactName, completedAt}' <<<"$review"
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+
+            echo "verdict=${verdict}" >> "$GITHUB_OUTPUT"
+            echo "report-url=${report_url}" >> "$GITHUB_OUTPUT"
+
+            IFS=',' read -ra blocked_verdicts <<< "$INPUT_FAIL_ON"
+            for blocked in "${blocked_verdicts[@]}"; do
+              if [[ "${blocked// /}" == "$verdict" ]]; then
+                echo "Preflight blocks this workflow because the verdict is ${verdict}." >&2
+                exit 2
+              fi
+            done
+            exit 0
+          fi
+
+          if [[ "$status" == "failed" ]]; then
+            echo "Preflight could not complete review ${review_id}." >&2
+            jq . <<<"$review" >&2
+            exit 1
+          fi
+          sleep 2
+        done
+
+        echo "Timed out waiting for Preflight review ${review_id}." >&2
+        exit 1

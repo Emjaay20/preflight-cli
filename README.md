@@ -94,6 +94,12 @@ Auth: `Authorization: Bearer pf_live_…` (scrypt-hashed at rest, prefix lookup,
 | POST | `/v1/reviews/demo` | `{ "fixture": "extra-host" }` |
 | GET | `/health/live` `/health/ready` `/health/operations` `/metrics` | Probes + Prometheus |
 
+## Use it in a real release workflow
+
+Preflight includes a reusable GitHub Action. It uploads the extension artifact,
+waits for the worker verdict, writes a GitHub check, and can stop a merge for
+`block` or `needs_human` results. See [GitHub Actions integration](docs/github-actions.md).
+
 ## Rule packs
 
 - `cws-2026.1` — Manifest V3, missing files, broad hosts, sensitive APIs, privacy URL, cleartext, remote/dynamic code.
