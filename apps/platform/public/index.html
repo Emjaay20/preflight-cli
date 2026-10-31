@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <title>Preflight — Chromium Extension Release Clearance</title>
   <style>
     :root {
@@ -388,25 +391,91 @@
     .err { color: var(--block); margin-top: 0.65rem; }
     .ok { color: var(--ship); margin-top: 0.65rem; }
     .hidden { display: none !important; }
+
+    /* Production-set visual system */
+    :root { --ink:#131313; --paper:#fcfcf9; --card:#fff; --rule:#e8e8e1; --muted:#777773; --lime:#e8ff4a; --block:#e25454; --human:#b98614; --ship:#1b7748; --queued:#4d6178; }
+    html { scroll-behavior:smooth; }
+    html,body { background:var(--paper); color:var(--ink); font:14px/1.5 Geist,Inter,ui-sans-serif,system-ui,sans-serif; }
+    body::before { background-image:radial-gradient(#e3e3db .7px,transparent .7px); background-size:13px 13px; content:""; inset:0; opacity:.45; pointer-events:none; position:fixed; z-index:-1; }
+    code,pre,.mono,.pill,.kpi-label,.kpi-value,.kpi-sub,.stamp,.brand,.mode-switch button,.console-tabs button,table th { font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace; }
+    .topbar { backdrop-filter:blur(14px); background:color-mix(in srgb,var(--paper) 89%,transparent); border-bottom:1px solid var(--rule); flex-wrap:nowrap; min-height:62px; padding:0 5vw; position:sticky; top:0; z-index:20; }
+    .brand-group { align-items:center; gap:.55rem; min-width:max-content; }
+    .brand { font-size:11px; letter-spacing:.19em; }
+    #headerContext { display:none; }
+    .runtime-tag { background:var(--ink); border-radius:3px; color:#fff; font:600 9px/1 "JetBrains Mono",monospace; letter-spacing:.06em; padding:5px 6px; }
+    .primary-nav { gap:0; margin-left:1.4rem; margin-right:auto; }
+    .primary-nav button { border:0; border-radius:14px; color:var(--muted); font:600 10px/1 "JetBrains Mono",monospace; letter-spacing:.03em; padding:.6rem .78rem; }
+    .primary-nav button[aria-current="page"] { background:#f0f0ed; border:0; color:var(--ink); }
+    .primary-nav button[data-nav="docs"],.primary-nav button[data-nav="sandbox"] { display:none; }
+    .header-actions { gap:.55rem; }
+    .header-actions .pill { display:none; }
+    .container { max-width:1160px; padding:3rem 5vw 5rem; }
+    h1,.display,#view-home h1 { font-family:"Instrument Serif",Iowan Old Style,Georgia,serif; font-size:clamp(3rem,5.25vw,5.45rem) !important; font-weight:400; letter-spacing:-.055em; line-height:.93; max-width:680px !important; }
+    h2,.card-header h2 { font:600 10px/1.15 "JetBrains Mono",monospace; letter-spacing:.12em; text-transform:uppercase; }
+    h3 { font-size:14px; letter-spacing:-.02em; }
+    .lead { color:#62625e; font-size:15px; line-height:1.6; max-width:610px; }
+    .card,.kpi-card { background:rgba(255,255,255,.82); border:1px solid var(--rule); border-radius:9px; box-shadow:none; }
+    .card { padding:1.2rem; }
+    .card-header { border-color:var(--rule); }
+    .pill { background:#f6f6f3; border:0; border-radius:99px; color:#777773; font-size:9px; letter-spacing:.04em; padding:.34rem .55rem; }
+    .pill.ok-pill { color:var(--ship); }.pill.warn-pill { color:var(--human); }.pill.block-pill { color:var(--block); }
+    button,input,select,textarea { border-radius:6px; font-family:Geist,sans-serif; }
+    button { background:var(--ink); border-color:var(--ink); font-weight:600; }
+    button:hover { transform:translateY(-1px); }
+    button.accent,.header-actions button:last-child { background:var(--lime); border-color:var(--lime); color:var(--ink); }
+    button.secondary { background:#fff; border-color:var(--rule); color:var(--ink); }
+    button.row { border-radius:6px; font-size:12px; padding:.64rem .85rem; }
+    button.small { border-radius:5px; font:500 10px/1 "JetBrains Mono",monospace; }
+    input,select,textarea { border-color:var(--rule); font-size:13px; }
+    input:focus,select:focus,textarea:focus { border-color:var(--ink); outline:2px solid var(--lime); outline-offset:1px; }
+    table { background:#fff; border:1px solid var(--rule); border-collapse:separate; border-radius:7px; border-spacing:0; overflow:hidden; }
+    table th { background:#f8f8f5; color:var(--muted); font-size:9px; letter-spacing:.07em; }
+    table td,table th { border-color:var(--rule); padding:.72rem; }
+    .stamp { border-radius:99px; font-size:9px; font-weight:600; letter-spacing:.05em; padding:.3rem .48rem; }
+    .stamp.block { background:#fff0ef; color:var(--block); }.stamp.needs_human { background:#fff7db; color:var(--human); }.stamp.ship_with_conditions,.stamp.ship { background:var(--lime); color:var(--ink); }.stamp.queued,.stamp.running,.stamp.pending { background:#eef0f2; color:var(--queued); }
+    .console-log,pre { background:#171717; border:1px solid #292929; border-radius:8px; box-shadow:0 12px 30px rgba(0,0,0,.13); color:#d8d8d1; font-family:"JetBrains Mono",monospace; }
+    .console-log .muted,pre .muted { color:#8f8f88; }.log-row { border-color:#30302d; }.log-tag { border-radius:3px; font-size:9px; }.log-tag.ok { color:var(--lime); }.log-tag.warn { color:#f3cf55; }.log-tag.block { color:#ff8585; }
+
+    /* Marketing page */
+    #view-home > .card:first-child { align-items:center; background:transparent; border:0; display:grid; gap:5rem; grid-template-columns:minmax(0,1.1fr) minmax(360px,.9fr); margin:2.8rem 0 3.7rem; padding:0; }
+    #view-home > .card:first-child > .eyebrow { margin-bottom:1.15rem; }
+    .eyebrow { color:var(--muted); font:600 10px/1 "JetBrains Mono",monospace; letter-spacing:.1em; text-transform:uppercase; }
+    .hero-terminal { align-self:stretch; background:#151515; border:1px solid #2d2d2b; border-radius:10px; box-shadow:0 20px 48px rgba(14,14,14,.2); color:#c7c7bf; font:11px/1.75 "JetBrains Mono",monospace; min-height:335px; overflow:hidden; padding:1rem 1.1rem; }
+    .hero-terminal .terminal-bar { border-bottom:1px solid #30302d; color:#7e7e79; display:flex; gap:.5rem; margin:-.1rem 0 1rem; padding-bottom:.75rem; }.terminal-dot { border-radius:50%; height:9px; width:9px; }.hero-terminal .ok-line { color:var(--lime); }.hero-terminal .verdict-box { background:#232323; border:1px solid #343432; border-radius:6px; margin-top:1.2rem; padding:.7rem; }
+    #view-home > .card:nth-child(2) { background:transparent; border-left:0; border-radius:0; border-right:0; margin-left:calc(50% - 50vw); margin-right:calc(50% - 50vw); padding:3rem max(5vw,calc((100vw - 1160px) / 2)); }
+    #view-home > .card:nth-child(2) .grid-3 { gap:.5rem; grid-template-columns:repeat(5,1fr); }
+    #view-home > .card:nth-child(2) .grid-3 > .card { background:rgba(255,255,255,.7) !important; min-height:146px; padding:.9rem; }
+    #view-home > .card:nth-child(2) .grid-3 > .card:nth-child(6) { display:none; }
+    #view-home > .card:nth-child(2) h3 { margin:1rem 0 .3rem; }#view-home > .card:nth-child(2) p { font-size:11px; }
+    #view-home > .grid-2 { gap:1rem; margin-top:3.5rem; }#view-home > .grid-2 .card { min-height:230px; }#view-home > .grid-2 .card h2 { color:var(--muted); }#view-home > .grid-2 .card p { color:#555550; font-size:13px; }#view-home > .grid-2 .card::before { color:var(--muted); content:"POLICY PACK"; font:600 9px/1 "JetBrains Mono",monospace; letter-spacing:.1em; }
+
+    /* Console */
+    #view-console { margin-top:.4rem; }.workspace-bar { background:#fff; border:1px solid var(--rule); border-radius:9px; box-shadow:0 4px 18px rgba(0,0,0,.03); padding:.75rem .9rem; }.workspace-bar label { font-size:9px; }
+    .console-tabs { display:flex; gap:.3rem; margin:1.2rem 0; overflow-x:auto; padding-bottom:.25rem; }.console-tabs button { background:#f3f3f0; border:0; color:var(--muted); font-size:10px; margin:0; padding:.55rem .7rem; white-space:nowrap; width:auto; }.console-tabs button:hover,.console-tabs button.active { background:var(--ink); color:#fff; }
+    .kpi-grid { gap:.7rem; margin:1.2rem 0; }.kpi-card { min-height:130px; padding:1rem; }.kpi-value { font-size:1.75rem; letter-spacing:-.06em; margin-top:1rem; }#console-reviews,#console-detail,#console-history,#console-team { scroll-margin-top:150px; }#console-reviews .card:first-child { border-top:2px solid var(--ink); }#console-detail { border-top:2px solid var(--lime); }.dropzone-note { border:1px dashed #c9c9c1; border-radius:7px; color:var(--muted); font:10px/1.5 "JetBrains Mono",monospace; margin-top:.5rem; padding:.6rem; }#accessManagementCard { min-height:100%; }
+    dialog { border:1px solid var(--rule); border-radius:12px; box-shadow:0 24px 80px rgba(0,0,0,.24); max-width:560px; }dialog::backdrop { backdrop-filter:blur(4px); background:rgba(20,20,18,.4); }
+    @media (max-width:900px) { .topbar { padding:.6rem 1rem; }.header-actions { display:none; }.primary-nav { margin-left:auto; }#view-home > .card:first-child { gap:2rem; grid-template-columns:1fr; }#view-home > .card:nth-child(2) .grid-3 { grid-template-columns:repeat(2,1fr); }#view-home > .card:nth-child(2) .grid-3 > .card:nth-child(5) { grid-column:span 2; }.hero-terminal { min-height:290px; } }
+    @media (max-width:580px) { .container { padding:1.3rem 1rem 3rem; }.brand-group .runtime-tag { display:none; }.primary-nav button { padding:.5rem; }h1,.display,#view-home h1 { font-size:3.1rem !important; }#view-home > .card:nth-child(2) .grid-3 { grid-template-columns:1fr; }#view-home > .card:nth-child(2) .grid-3 > .card:nth-child(5) { grid-column:auto; } }
   </style>
 </head>
 <body>
   <header class="topbar">
     <div class="brand-group">
       <a href="#home" class="brand" id="brandHome">Preflight</a>
+      <span class="runtime-tag">RUST / MV3</span>
       <span class="muted" id="headerContext">Chromium Extension Release Clearance</span>
     </div>
     <nav class="primary-nav" aria-label="Primary">
-      <button type="button" data-nav="home" aria-current="page">Home</button>
+      <button type="button" data-nav="home" aria-current="page">Marketing</button>
       <button type="button" data-nav="docs">Docs</button>
-      <button type="button" data-nav="auth" id="navAuthBtn">Login / Sign Up</button>
+      <button type="button" data-nav="auth" id="navAuthBtn">Sign In</button>
       <button type="button" data-nav="sandbox">Sandbox</button>
       <button type="button" data-nav="console" id="navConsoleBtn">Console</button>
     </nav>
     <div class="header-actions">
       <span class="pill ok-pill">forbid(unsafe_code)</span>
       <span class="pill warn-pill">auto_ship: false</span>
-      <button type="button" class="row accent" id="headerSandboxBtn" style="margin:0">Open sandbox</button>
+      <button type="button" class="row accent" id="headerSandboxBtn" style="margin:0">Create Workspace</button>
     </div>
   </header>
 
@@ -414,16 +483,30 @@
     <!-- ==================== 1. LANDING PAGE (HOME) ==================== -->
     <section id="view-home">
       <div class="card" style="padding: 2rem">
-        <p class="mono muted" style="margin:0 0 0.4rem; text-transform:uppercase; letter-spacing:0.1em">Release Clearance Gate · Rust CLI + Multi-Tenant Web Control Plane</p>
-        <h1 style="font-size:1.85rem; max-width:780px">Does this build still match the last shipped artifact and the claims we made to users and stores?</h1>
-        <p class="lead" style="max-width:760px; margin-top:0.65rem">
-          Chrome extension zips drift. A teammate adds an undeclared analytics host, <code>eval()</code>, or broad <code>*://*/*</code> permissions while your store listing still promises strict opt-in privacy. Preflight gates every build before Chrome Web Store submission — in the browser or from your terminal.
-        </p>
-        <div style="margin-top:1.25rem">
-          <button type="button" class="row accent" data-goto="sandbox">Try Live Sandbox (No Login)</button>
-          <button type="button" class="row" data-goto="auth">Organization / Individual Sign Up</button>
-          <button type="button" class="row secondary" data-goto="docs">Read Docs &amp; CLI Guide</button>
-          <button type="button" class="row secondary hidden" id="homeDemoBtn">Load Demo Workspace (Harbor Node)</button>
+        <div>
+          <p class="eyebrow">◉ ADR-0003 &nbsp; Human sign-off enforced</p>
+          <h1 style="font-size:1.85rem; max-width:780px">Does this build still match what you shipped and what you promised?</h1>
+          <p class="lead" style="max-width:760px; margin-top:0.9rem">
+            Preflight is the release clearance for Chromium extensions. It isolates every tenant, diffs against your baseline, and enforces policy packs before you push to CWS. Zero runtime execution. Out-of-process Rust.
+          </p>
+          <div style="margin-top:1.25rem">
+            <button type="button" class="row accent" data-goto="sandbox">Start review →</button>
+            <button type="button" class="row secondary" data-goto="auth">Create workspace</button>
+            <button type="button" class="row secondary" data-goto="docs">CLI + API docs</button>
+            <button type="button" class="row secondary hidden" id="homeDemoBtn">Load Demo Workspace (Harbor Node)</button>
+          </div>
+          <div style="display:flex;gap:.45rem;flex-wrap:wrap;margin-top:1.1rem"><span class="pill">Harbor Node · isolated per tenant</span><span class="pill">5 agents · Rust · MV3</span></div>
+        </div>
+        <div class="hero-terminal" aria-label="Example Preflight agent console">
+          <div class="terminal-bar"><span class="terminal-dot" style="background:#ff625d"></span><span class="terminal-dot" style="background:#ffbe45"></span><span class="terminal-dot" style="background:#2bcf60"></span><span style="margin-left:auto">preflight — Harbor Node — zsh</span></div>
+          <div>[agent:artifact-hasher] hashing 142 files…</div>
+          <div>[agent:evidence-extractor] parsing manifest + content scripts</div>
+          <div>[agent:baseline-diff] diffing vs v1.4.1</div>
+          <div>[agent:policy-auditor] cws-2026.1 + node-client-2026.1</div>
+          <div class="ok-line">[agent:arbiter] verdict SHIP · 0 findings · auto_ship=false</div>
+          <div>› preflight push —yes —sign-off human</div>
+          <div>✓ build attested at preflight.aetherhost.com.ng</div>
+          <div class="verdict-box"><strong>Verdict</strong><span style="float:right;background:var(--lime);color:#111;border-radius:3px;padding:1px 6px">SHIP</span><br><span style="color:#8f8f88">auto_ship=false · findings=0 · baseline=v1.4.1</span></div>
         </div>
       </div>
 
@@ -698,7 +781,7 @@ cargo run -- push fixtures/harbor-node/clean-relay.zip \
     <!-- ==================== 5. AUTHENTICATED CONSOLE FLOOR ==================== -->
     <section id="view-console" class="hidden">
       <!-- SignalDesk-style Workspace API Key Bar -->
-      <div class="workspace-bar">
+      <div class="workspace-bar" id="console-settings">
         <form id="switchWorkspaceForm" class="workspace-bar-left" action="/v1/me" method="GET">
           <label for="consoleKeyInput">Workspace API Key:</label>
           <input id="consoleKeyInput" name="apiKey" type="password" placeholder="pf_live_…" autocomplete="current-password" autocorrect="off" autocapitalize="off" spellcheck="false" style="max-width:310px" />
@@ -712,8 +795,17 @@ cargo run -- push fixtures/harbor-node/clean-relay.zip \
         </div>
       </div>
 
+      <nav class="console-tabs" aria-label="Console sections">
+        <button type="button" class="active" data-console-scroll="console-overview">Overview</button>
+        <button type="button" data-console-scroll="console-reviews">Projects &amp; Reviews</button>
+        <button type="button" data-console-scroll="console-detail">Review detail</button>
+        <button type="button" data-console-scroll="console-team">Team &amp; keys</button>
+        <button type="button" data-console-sandbox>Sandbox</button>
+        <button type="button" data-console-scroll="console-settings">Settings</button>
+      </nav>
+
       <!-- 4 KPI Telemetry Cards -->
-      <div class="kpi-grid">
+      <div class="kpi-grid" id="console-overview">
         <div class="kpi-card">
           <div class="kpi-label">Latest Project Verdict</div>
           <div class="kpi-value" id="kpiVerdict">—</div>
@@ -736,7 +828,7 @@ cargo run -- push fixtures/harbor-node/clean-relay.zip \
         </div>
       </div>
 
-      <div class="grid-2">
+      <div class="grid-2" id="console-reviews">
         <!-- Left Card: Artifact Ingestion & Project Claims -->
         <div class="card">
           <div class="card-header">
@@ -750,6 +842,7 @@ cargo run -- push fixtures/harbor-node/clean-relay.zip \
 
             <label for="file">Extension Artifact (.zip / .crx)</label>
             <input id="file" name="artifact" type="file" accept=".zip,.crx" />
+            <div class="dropzone-note">Drop a <strong>.zip</strong> or <strong>.crx</strong> build here. Preflight stores it in the active project, compares it with the last signed-off baseline, and queues a deterministic Rust review.</div>
 
             <label for="claims">Project Claims JSON (<code>claims.json</code>)</label>
             <textarea id="claims" name="claims" spellcheck="false" placeholder='{"purpose":"...","allowed_hosts":["api.example.com"],"privacy_url":"https://example.com/privacy"}'></textarea>
@@ -805,7 +898,7 @@ cargo run -- push fixtures/harbor-node/clean-relay.zip \
       </div>
 
       <!-- Middle Card: Active Review Verdict, Findings & Human Sign-Off -->
-      <div class="card">
+      <div class="card" id="console-detail">
         <div class="card-header">
           <h2>Review Verdict, Findings &amp; Mandatory Human Sign-Off</h2>
           <span class="pill">ADR-0003: Human Sign-Off Required</span>
@@ -836,7 +929,7 @@ cargo run -- push fixtures/harbor-node/clean-relay.zip \
       </div>
 
       <!-- Bottom Grid: Project Review History & Team Member / Key Rotation -->
-      <div class="grid-2">
+      <div class="grid-2" id="console-history">
         <div class="card">
           <div class="card-header">
             <h2>Project Review History</h2>
@@ -845,6 +938,7 @@ cargo run -- push fixtures/harbor-node/clean-relay.zip \
           <div id="history" class="history muted">No reviews for this project yet.</div>
         </div>
 
+        <span id="console-team" aria-hidden="true"></span>
         <div class="card" id="accessManagementCard">
           <div class="card-header">
             <h2 id="accessCardTitle">Team Members &amp; API Keys</h2>
@@ -1003,7 +1097,17 @@ cargo run -- push fixtures/harbor-node/clean-relay.zip \
       e.preventDefault();
       switchView("home");
     });
-    $("headerSandboxBtn").addEventListener("click", () => switchView("sandbox"));
+    $("headerSandboxBtn").addEventListener("click", () => switchView("auth"));
+
+    document.querySelectorAll("[data-console-scroll]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("[data-console-scroll]").forEach((b) => b.classList.toggle("active", b === btn));
+        $(btn.dataset.consoleScroll)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+    document.querySelectorAll("[data-console-sandbox]").forEach((btn) => {
+      btn.addEventListener("click", () => switchView("sandbox"));
+    });
 
     // Account Type radio toggle on Sign Up
     document.querySelectorAll('input[name="accountType"]').forEach((radio) => {
