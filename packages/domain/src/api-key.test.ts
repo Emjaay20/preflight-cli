@@ -17,6 +17,13 @@ describe("api keys", () => {
     expect(parsed).toEqual({ prefix: key.prefix, secret: key.secret });
   });
 
+  it("parses a public prefix containing a base64url underscore", () => {
+    expect(parseApiKey("pf_live_ab_cdE_secret_value")).toEqual({
+      prefix: "pf_live_ab_cdE",
+      secret: "secret_value",
+    });
+  });
+
   it("rejects malformed keys", () => {
     expect(() => parseApiKey("sk_live_nope")).toThrow(/pf_live_/);
     expect(() => parseApiKey("pf_live_short")).toThrow(/format/);

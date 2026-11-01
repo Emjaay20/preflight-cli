@@ -34,6 +34,13 @@ export class DashboardController {
     return fs.readFile(file, "utf8");
   }
 
+  @Get("guide")
+  @Header("content-type", "text/html; charset=utf-8")
+  async guide() {
+    const file = path.join(__dirname, "..", "public", "docs.html");
+    return fs.readFile(file, "utf8");
+  }
+
   @Get("v1/meta")
   async meta() {
     const root = process.env.FIXTURES_DIR ?? path.resolve("fixtures/harbor-node");

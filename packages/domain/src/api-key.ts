@@ -14,6 +14,7 @@ export type MintedApiKey = {
 
 const PREFIX_BYTES = 4;
 const SECRET_BYTES = 18;
+const PREFIX_TOKEN_LENGTH = Math.ceil((PREFIX_BYTES * 4) / 3);
 
 function token(bytes: number): string {
   return randomBytes(bytes).toString("base64url");
@@ -71,13 +72,14 @@ export function parseApiKey(plaintext: string): { prefix: string; secret: string
   if (!plaintext.startsWith("pf_live_")) {
     throw new Error("API key must start with pf_live_");
   }
-  const rest = plaintext.slice("pf_live_".length);
-  const idx = rest.indexOf("_");
-  if (idx <= 0 || idx === rest.length - 1) {
+  // Base64url permits `_`, so a delimiter search is ambiguous. The public
+  // prefix has a fixed byte length; use that known boundary instead.
+  const prefixEnd = "pf_live_".length + PREFIX_TOKEN_LENGTH;
+  if (plaintext.length <= prefixEnd + 1 || plaintext[prefixEnd] !== "_") {
     throw new Error("API key format is pf_live_<prefix>_<secret>");
   }
   return {
-    prefix: `pf_live_${rest.slice(0, idx)}`,
-    secret: rest.slice(idx + 1),
+    prefix: plaintext.slice(0, prefixEnd),
+    secret: plaintext.slice(prefixEnd + 1),
   };
 }
