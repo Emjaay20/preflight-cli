@@ -284,6 +284,15 @@ export class AccountsService {
     return { id: keyId, revoked: true };
   }
 
+  async rotateKey(organizationId: string, keyId: string) {
+    const current = await this.prisma.apiKey.findFirst({ where: { id: keyId, organizationId, revokedAt: null } });
+    if (!current) throw new NotFoundException("active API key not found in this organization");
+    const replacement = await this.mintKey(organizationId, `${current.name} (rotated)`, current.role, current.email ?? undefined);
+    await this.prisma.apiKey.update({ where: { id: keyId }, data: { revokedAt: new Date(), replacedById: replacement.id } });
+    await this.prisma.auditEvent.create({ data: { organizationId, actor: current.prefix, action: "key.rotated", targetType: "api_key", targetId: keyId, metadata: { replacementId: replacement.id } } });
+    return replacement;
+  }
+
   async requestUpgrade(organizationId: string, email: string, message?: string) {
     const request = await this.prisma.accessRequest.create({ data: { organizationId, email: email.trim(), message: message?.trim() || null } });
     await this.prisma.auditEvent.create({ data: { organizationId, actor: email.trim(), action: "upgrade.requested", targetType: "workspace", targetId: organizationId, metadata: { requestId: request.id } } });

@@ -63,6 +63,7 @@ export class ReviewsController {
     @Body("claims") claimsRaw?: string,
   ) {
     if (!file) throw new BadRequestException("artifact file is required");
+    await this.enforceReviewQuota(auth);
     let claims: unknown;
     if (claimsRaw && claimsRaw.trim()) {
       try {
@@ -180,6 +181,7 @@ export class ReviewsController {
     @CurrentAuth() auth: AuthContext,
     @Body() body: { fixture?: string; projectId?: string },
   ) {
+    await this.enforceReviewQuota(auth);
     const fixture = body.fixture ?? "clean-relay";
     if (!FIXTURES.includes(fixture as (typeof FIXTURES)[number])) {
       throw new NotFoundException(`unknown fixture ${fixture}`);
@@ -201,6 +203,18 @@ export class ReviewsController {
       submittedBy: actorLabel(auth),
     });
     return serialize(review);
+  }
+
+  private async enforceReviewQuota(auth: AuthContext) {
+    const org = await this.prisma.organization.findUniqueOrThrow({ where: { id: auth.organizationId } });
+    const start = new Date();
+    start.setUTCDate(1); start.setUTCHours(0, 0, 0, 0);
+    const used = await this.prisma.review.count({ where: { project: { organizationId: auth.organizationId }, createdAt: { gte: start } } });
+    if (used >= org.reviewLimit) {
+      await this.prisma.auditEvent.create({ data: { organizationId: auth.organizationId, actor: actorLabel(auth), action: "quota.review.denied", targetType: "workspace", metadata: { used, limit: org.reviewLimit } } });
+      throw new ForbiddenException(`free evaluation review limit reached (${org.reviewLimit}/month); request an upgrade at yusuf@yusufsaka.dev`);
+    }
+    await this.prisma.auditEvent.create({ data: { organizationId: auth.organizationId, actor: actorLabel(auth), action: "review.quota.reserved", targetType: "workspace", metadata: { used, limit: org.reviewLimit } } });
   }
 }
 

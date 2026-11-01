@@ -143,6 +143,14 @@ export class AccountsController {
 
   @ApiBearerAuth()
   @UseGuards(ApiKeyGuard)
+  @Post("keys/:id/rotate")
+  rotateKey(@CurrentAuth() auth: AuthContext, @Param("id") id: string) {
+    if (!canManageOrg(auth.role)) throw new ForbiddenException("only admin keys can rotate API keys");
+    return this.accounts.rotateKey(auth.organizationId, id);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(ApiKeyGuard)
   @Post("access-requests")
   requestUpgrade(@CurrentAuth() auth: AuthContext, @Body() body: { email?: string; message?: string }) {
     if (!body.email) throw new BadRequestException("email is required");
