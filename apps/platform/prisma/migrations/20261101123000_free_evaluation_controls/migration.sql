@@ -1,0 +1,13 @@
+ALTER TABLE "Organization" ADD COLUMN IF NOT EXISTS "plan" TEXT NOT NULL DEFAULT 'free_evaluation';
+ALTER TABLE "Organization" ADD COLUMN IF NOT EXISTS "reviewLimit" INTEGER NOT NULL DEFAULT 10;
+ALTER TABLE "Organization" ADD COLUMN IF NOT EXISTS "projectLimit" INTEGER NOT NULL DEFAULT 2;
+ALTER TABLE "Organization" ADD COLUMN IF NOT EXISTS "artifactLimitBytes" INTEGER NOT NULL DEFAULT 26214400;
+ALTER TABLE "Organization" ADD COLUMN IF NOT EXISTS "retentionDays" INTEGER NOT NULL DEFAULT 14;
+ALTER TABLE "ApiKey" ADD COLUMN IF NOT EXISTS "expiresAt" TIMESTAMP(3);
+ALTER TABLE "ApiKey" ADD COLUMN IF NOT EXISTS "replacedById" TEXT;
+CREATE TABLE IF NOT EXISTS "AuditEvent" ("id" TEXT NOT NULL, "organizationId" TEXT NOT NULL, "actor" TEXT NOT NULL, "action" TEXT NOT NULL, "targetType" TEXT NOT NULL, "targetId" TEXT, "metadata" JSONB, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "AuditEvent_pkey" PRIMARY KEY ("id"));
+CREATE TABLE IF NOT EXISTS "AccessRequest" ("id" TEXT NOT NULL, "organizationId" TEXT NOT NULL, "email" TEXT NOT NULL, "message" TEXT, "status" TEXT NOT NULL DEFAULT 'open', "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "AccessRequest_pkey" PRIMARY KEY ("id"));
+CREATE INDEX IF NOT EXISTS "AuditEvent_organizationId_createdAt_idx" ON "AuditEvent"("organizationId", "createdAt");
+CREATE INDEX IF NOT EXISTS "AccessRequest_organizationId_status_idx" ON "AccessRequest"("organizationId", "status");
+ALTER TABLE "AuditEvent" ADD CONSTRAINT "AuditEvent_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "AccessRequest" ADD CONSTRAINT "AccessRequest_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;

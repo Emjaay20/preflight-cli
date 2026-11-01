@@ -140,4 +140,12 @@ export class AccountsController {
     }
     return this.accounts.revokeKey(auth.organizationId, id, auth.apiKeyId);
   }
+
+  @ApiBearerAuth()
+  @UseGuards(ApiKeyGuard)
+  @Post("access-requests")
+  requestUpgrade(@CurrentAuth() auth: AuthContext, @Body() body: { email?: string; message?: string }) {
+    if (!body.email) throw new BadRequestException("email is required");
+    return this.accounts.requestUpgrade(auth.organizationId, body.email, body.message);
+  }
 }

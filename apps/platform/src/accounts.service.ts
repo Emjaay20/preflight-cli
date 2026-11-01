@@ -124,6 +124,8 @@ export class AccountsService {
         name: org.name,
         slug: org.slug,
         accountType: parseAccountType(org.accountType, "organization"),
+        plan: org.plan,
+        entitlements: { reviewsPerMonth: org.reviewLimit, projects: org.projectLimit, artifactBytes: org.artifactLimitBytes, retentionDays: org.retentionDays },
       },
       currentKey: {
         id: auth.apiKeyId,
@@ -147,10 +149,14 @@ export class AccountsService {
   ) {
     const trimmed = name.trim();
     if (!trimmed) throw new ConflictException("project name is required");
+    const org = await this.prisma.organization.findUniqueOrThrow({ where: { id: organizationId } });
     const existing = await this.prisma.project.findMany({
       where: { organizationId },
       select: { slug: true },
     });
+    if (existing.length >= org.projectLimit) {
+      throw new ConflictException(`free evaluation project limit reached (${org.projectLimit}); request an upgrade at yusuf@yusufsaka.dev`);
+    }
     const slug = uniqueSlug(trimmed, new Set(existing.map((p) => p.slug)));
     const project = await this.prisma.project.create({
       data: {
@@ -276,5 +282,11 @@ export class AccountsService {
       data: { revokedAt: new Date() },
     });
     return { id: keyId, revoked: true };
+  }
+
+  async requestUpgrade(organizationId: string, email: string, message?: string) {
+    const request = await this.prisma.accessRequest.create({ data: { organizationId, email: email.trim(), message: message?.trim() || null } });
+    await this.prisma.auditEvent.create({ data: { organizationId, actor: email.trim(), action: "upgrade.requested", targetType: "workspace", targetId: organizationId, metadata: { requestId: request.id } } });
+    return { id: request.id, status: request.status, contact: "yusuf@yusufsaka.dev" };
   }
 }

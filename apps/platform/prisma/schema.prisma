@@ -14,8 +14,15 @@ model Organization {
   slug        String     @unique
   accountType String     @default("organization")
   createdAt   DateTime   @default(now())
+  plan        String     @default("free_evaluation")
+  reviewLimit Int        @default(10)
+  projectLimit Int       @default(2)
+  artifactLimitBytes Int @default(26214400)
+  retentionDays Int      @default(14)
   projects    Project[]
   apiKeys     ApiKey[]
+  auditEvents AuditEvent[]
+  accessRequests AccessRequest[]
 }
 
 model ApiKey {
@@ -30,6 +37,32 @@ model ApiKey {
   createdAt      DateTime       @default(now())
   lastUsedAt     DateTime?
   revokedAt      DateTime?
+  expiresAt      DateTime?
+  replacedById   String?
+}
+
+model AuditEvent {
+  id String @id @default(cuid())
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  actor String
+  action String
+  targetType String
+  targetId String?
+  metadata Json?
+  createdAt DateTime @default(now())
+  @@index([organizationId, createdAt])
+}
+
+model AccessRequest {
+  id String @id @default(cuid())
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  email String
+  message String?
+  status String @default("open")
+  createdAt DateTime @default(now())
+  @@index([organizationId, status])
 }
 
 
