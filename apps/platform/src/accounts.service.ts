@@ -298,4 +298,8 @@ export class AccountsService {
     await this.prisma.auditEvent.create({ data: { organizationId, actor: email.trim(), action: "upgrade.requested", targetType: "workspace", targetId: organizationId, metadata: { requestId: request.id } } });
     return { id: request.id, status: request.status, contact: "yusuf@yusufsaka.dev" };
   }
+
+  async auditReport(organizationId: string) {
+    return this.prisma.auditEvent.findMany({ where: { organizationId }, orderBy: { createdAt: "desc" }, take: 1000 });
+  }
 }

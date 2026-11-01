@@ -156,4 +156,13 @@ export class AccountsController {
     if (!body.email) throw new BadRequestException("email is required");
     return this.accounts.requestUpgrade(auth.organizationId, body.email, body.message);
   }
+
+  @ApiBearerAuth()
+  @UseGuards(ApiKeyGuard)
+  @Get("audit-report")
+  async auditReport(@CurrentAuth() auth: AuthContext) {
+    if (!canManageOrg(auth.role)) throw new ForbiddenException("only admin keys can export audit reports");
+    const events = await this.accounts.auditReport(auth.organizationId);
+    return { generatedAt: new Date().toISOString(), format: "json", events };
+  }
 }
