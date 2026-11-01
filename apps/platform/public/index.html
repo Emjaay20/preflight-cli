@@ -456,6 +456,36 @@
     dialog { border:1px solid var(--rule); border-radius:12px; box-shadow:0 24px 80px rgba(0,0,0,.24); max-width:560px; }dialog::backdrop { backdrop-filter:blur(4px); background:rgba(20,20,18,.4); }
     @media (max-width:900px) { .topbar { padding:.6rem 1rem; }.header-actions { display:none; }.primary-nav { margin-left:auto; }#view-home > .card:first-child { gap:2rem; grid-template-columns:1fr; }#view-home > .card:nth-child(2) .grid-3 { grid-template-columns:repeat(2,1fr); }#view-home > .card:nth-child(2) .grid-3 > .card:nth-child(5) { grid-column:span 2; }.hero-terminal { min-height:290px; } }
     @media (max-width:580px) { .container { padding:1.3rem 1rem 3rem; }.brand-group .runtime-tag { display:none; }.primary-nav button { padding:.5rem; }h1,.display,#view-home h1 { font-size:3.1rem !important; }#view-home > .card:nth-child(2) .grid-3 { grid-template-columns:1fr; }#view-home > .card:nth-child(2) .grid-3 > .card:nth-child(5) { grid-column:auto; } }
+
+    /* Redesign V2 marketing composition */
+    .topbar { min-height:52px; padding:0 max(4vw,calc((100vw - 1120px)/2)); }
+    .primary-nav { gap:.05rem; margin-left:auto; margin-right:auto; }
+    .primary-nav button { font-size:8px; letter-spacing:.13em; padding:.55rem .52rem; text-transform:uppercase; }
+    .primary-nav .console-nav { display:none; }
+    .header-actions button { font-size:9px; padding:.5rem .7rem; }
+    #view-home { margin:0 calc(50% - 50vw); }
+    #view-home h1 { font-size:clamp(3rem,4.35vw,4.7rem) !important; line-height:.89; max-width:560px !important; }
+    #view-home h1 em { color:#9a9a98; font-weight:400; }
+    #view-home h2 { font-family:"Instrument Serif",Georgia,serif; font-size:clamp(1.65rem,2.2vw,2.25rem); font-weight:400; letter-spacing:-.045em; line-height:1; text-transform:none; }
+    .home-hero,.home-band,.home-cta,.marketing-footer { margin-left:auto; margin-right:auto; max-width:1120px; padding-left:24px; padding-right:24px; }
+    .home-hero { align-items:center; display:grid; gap:6.5rem; grid-template-columns:minmax(0,.95fr) minmax(390px,.75fr); min-height:465px; padding-bottom:4.5rem; padding-top:4.3rem; }
+    .home-hero .eyebrow { border:1px solid var(--rule); border-radius:99px; display:inline-block; font-size:8px; letter-spacing:.12em; padding:5px 8px; }
+    .hero-copy .lead { font-size:12px; line-height:1.6; margin-top:1.1rem; max-width:410px; }
+    .hero-actions { display:flex; gap:.65rem; margin-top:1.2rem; }
+    .hero-actions .row { align-items:center; display:inline-flex; font:600 10px/1 "JetBrains Mono",monospace; margin:0; padding:.75rem .85rem; width:auto; }
+    .cli-copy span { font-size:12px; margin-left:.5rem; }
+    .hero-status { color:#91918d; font:9px/1.4 "JetBrains Mono",monospace; margin-top:1.35rem; }.hero-status span { color:#72bd8c; }.hero-status b { font-weight:400; margin-left:1.3rem; }
+    .micro-stats { border:1px solid var(--rule); border-radius:5px; display:grid; grid-template-columns:repeat(3,1fr); margin-top:1.7rem; max-width:440px; overflow:hidden; }.micro-stats div { padding:.65rem .75rem; }.micro-stats div+div { border-left:1px solid var(--rule); }.micro-stats small { color:#9d9d99; display:block; font:8px/1 "JetBrains Mono",monospace; letter-spacing:.08em; }.micro-stats strong { display:block; font:600 10px/1.4 "JetBrains Mono",monospace; margin-top:.35rem; }
+    .pale-terminal { background:rgba(255,255,255,.66); border-color:#e6e6e0; box-shadow:0 14px 32px rgba(20,20,17,.05); color:#53534f; font-size:8px; line-height:1.55; min-height:0; padding:.72rem .75rem; }.pale-terminal .terminal-bar { align-items:center; border-color:#eeeeea; color:#a3a39e; font-size:8px; margin:0 0 .6rem; padding:0 0 .52rem; }.pale-terminal .terminal-dot { height:7px; width:7px; }.terminal-event { border-bottom:1px solid #ecece7; padding:.44rem 0; }.terminal-event i { background:#eee; border-radius:2px; color:#8c8c87; font-size:7px; font-style:normal; margin-right:.45rem; padding:3px; }.terminal-decision { background:#151515; border:0; border-radius:3px; color:#f0f0eb; margin-top:.25rem; padding:.55rem; }.terminal-decision i { background:#30302e; color:#fff; }.terminal-key { align-items:center; color:#8d8d87; display:flex; font-size:7px; gap:.55rem; margin-top:.65rem; }.terminal-key span:first-child { color:#599d6f; }.terminal-key button { font-size:7px; margin:0 0 0 auto; padding:4px 6px; width:auto; }.terminal-key button+button { margin-left:0; opacity:.5; }
+    .home-band { border-top:1px solid #eeeeea; padding-bottom:4rem; padding-top:3.5rem; }.home-band::before { background:linear-gradient(90deg,transparent,#efefea 30%,#efefea 70%,transparent); content:""; display:block; height:1px; margin:-3.5rem 0 3.5rem; }.section-kicker { align-items:baseline; display:flex; gap:1.1rem; justify-content:space-between; margin-bottom:1.5rem; }.section-kicker>span,.section-kicker small,.policy-intro>span,.home-cta small,.marketing-footer { color:#969691; font:8px/1.35 "JetBrains Mono",monospace; letter-spacing:.08em; }.section-kicker>span { min-width:86px; }.section-kicker h2 { margin:0 auto 0 0; }.section-kicker small { text-align:right; }.section-kicker em { color:#63a675; font-size:8px; font-style:normal; }
+    .agent-row { display:grid; gap:.55rem; grid-template-columns:repeat(5,1fr); }.agent-row article { background:rgba(255,255,255,.62); border:1px solid var(--rule); border-radius:6px; min-height:120px; padding:.75rem; position:relative; }.agent-row article::after { background:#e5e5df; border-radius:50%; content:""; height:5px; position:absolute; right:8px; top:9px; width:5px; }.agent-row span,.agent-row code { color:#9d9d98; font-size:8px; }.agent-row h3 { font-size:11px; margin:1.1rem 0 .2rem; }.pipeline-notes { display:grid; gap:.55rem; grid-template-columns:repeat(3,1fr); margin-top:1rem; }.pipeline-notes span { background:rgba(255,255,255,.66); border:1px solid var(--rule); border-radius:4px; color:#92928d; font:8px/1.35 "JetBrains Mono",monospace; padding:.55rem; }
+    .policy-section { align-items:center; display:grid; gap:3rem; grid-template-columns:.72fr 1.28fr; }.policy-intro h2 { max-width:280px; }.policy-intro p { color:#82827c; font-size:11px; line-height:1.45; max-width:260px; }.policy-matrix { display:grid; gap:0; grid-template-columns:1fr 1fr; }.policy-matrix article { background:rgba(255,255,255,.78); border:1px solid var(--rule); border-radius:7px; overflow:hidden; }.policy-matrix article+article { border-left:0; border-radius:0 7px 7px 0; }.policy-matrix article:first-child { border-radius:7px 0 0 7px; }.policy-matrix header { align-items:baseline; display:flex; justify-content:space-between; padding:.75rem; }.policy-matrix header strong { font:600 9px "JetBrains Mono",monospace; }.policy-matrix header small,.policy-matrix footer { color:#9f9f99; font:7px "JetBrains Mono",monospace; letter-spacing:.08em; }.policy-matrix p { border-top:1px solid var(--rule); color:#767671; font:8px/1.4 "JetBrains Mono",monospace; margin:0; padding:.55rem .75rem; }.policy-matrix p code { color:#aaa9a4; font-size:7px; margin-right:.55rem; }.policy-matrix p b { background:#fff1ee; border-radius:99px; color:#e27469; float:right; font-size:7px; font-weight:500; padding:2px 4px; }.policy-matrix footer { border-top:1px solid var(--rule); display:block; padding:.65rem .75rem; }
+    .isolation-heading { margin-bottom:1.35rem; }.segmented { background:#f2f2ee; border-radius:99px; display:flex; font:8px "JetBrains Mono",monospace; padding:3px; }.segmented>* { padding:4px 8px; }.segmented b { background:#161616; border-radius:99px; color:#fff; }.isolation-grid { display:grid; gap:1rem; grid-template-columns:1.18fr .82fr; }.isolation-grid article { background:rgba(255,255,255,.72); border:1px solid var(--rule); border-radius:7px; min-height:185px; padding:.9rem; }.isolation-grid article header { color:#aaa9a5; font:8px "JetBrains Mono",monospace; letter-spacing:.12em; }.workspace-cells,.roles { display:grid; gap:.35rem; grid-template-columns:repeat(3,1fr); margin-top:.8rem; }.workspace-cells span,.roles span { background:#fbfbf8; border:1px solid #efefea; border-radius:4px; color:#9b9b96; font:7px/1.6 "JetBrains Mono",monospace; padding:.5rem; }.workspace-cells b,.roles b { color:#555550; font-weight:500; }.roles { margin-top:.35rem; }.isolation-grid footer { color:#aaa9a3; display:block; font:7px/1.45 "JetBrains Mono",monospace; margin-top:.8rem; }.isolation-grid ol { color:#898984; font:8px/1.75 "JetBrains Mono",monospace; list-style:none; margin:.75rem 0 0; padding:0; }
+    .cli-section .section-kicker { justify-content:flex-start; }.cli-terminal { background:#151515; border:1px solid #292927; border-radius:7px; color:#e7e7e1; display:grid; gap:1rem; grid-template-columns:1fr 1fr; padding:.8rem 1rem; }.cli-terminal>div { position:relative; }.cli-terminal>div+div { border-left:1px solid #353532; padding-left:1rem; }.cli-terminal small { color:#a4a49d; font:7px "JetBrains Mono",monospace; letter-spacing:.12em; }.cli-terminal button { float:right; font-size:7px; margin:0; padding:3px 5px; width:auto; }.cli-terminal pre { background:transparent; border:0; box-shadow:none; color:#dddcd6; font-size:8px; line-height:1.55; margin:.55rem 0 0; padding:0; white-space:pre-wrap; }.api-strip { display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.7rem; }.api-strip span { background:#fff; border:1px solid var(--rule); border-radius:3px; color:#8e8e88; font:7px "JetBrains Mono",monospace; padding:4px 5px; }
+    .sandbox-preview .section-kicker { align-items:flex-start; flex-wrap:wrap; }.sandbox-preview .section-kicker h2 { flex-basis:100%; }.sandbox-preview .section-kicker em { margin-left:auto; margin-top:-2.5rem; }.sandbox-shell { background:rgba(255,255,255,.78); border:1px solid var(--rule); border-radius:7px; display:grid; grid-template-columns:180px 1fr 245px; min-height:270px; overflow:hidden; }.sandbox-shell aside { border-right:1px solid var(--rule); padding:.7rem; }.sandbox-shell aside small,.sandbox-shell header { color:#9c9c96; display:block; font:7px "JetBrains Mono",monospace; letter-spacing:.1em; }.sandbox-shell aside button { background:#fff; border-color:#ededE7; color:#5a5a55; display:block; font:8px "JetBrains Mono",monospace; margin:.35rem 0 0; padding:.5rem; text-align:left; }.sandbox-shell aside button:first-of-type { background:#141414; color:#fff; }.sandbox-shell aside b { color:#d9776f; float:right; font-size:7px; font-weight:500; }.claims-preview { border-right:1px solid var(--rule); }.claims-preview header,.sandbox-console>header { border-bottom:1px solid var(--rule); padding:.65rem .75rem; }.claims-preview header span { float:right; }.claims-preview pre { background:transparent; border:0; box-shadow:none; color:#666661; font-size:8px; line-height:1.55; margin:0; padding:.85rem; white-space:pre-wrap; }.claims-preview footer { border-top:1px solid var(--rule); color:#aaa9a5; font:7px "JetBrains Mono",monospace; padding:.5rem .75rem; }.claims-preview footer b { float:right; font-weight:500; }.sandbox-console { padding:0; }.sandbox-console>p,.sandbox-console>strong,.sandbox-console>div { color:#83837e; display:block; font:8px/1.55 "JetBrains Mono",monospace; margin:.7rem; }.sandbox-console>strong { color:#555550; margin-bottom:-.45rem; }.sandbox-console>div { background:#fff; border:1px solid #efefea; border-radius:4px; padding:.5rem; }.sandbox-console section { background:#fff1ef; border-top:1px solid #ffd8d4; color:#a76059; font:8px "JetBrains Mono",monospace; margin-top:1rem; padding:.7rem; }.sandbox-console section small { float:right; }.sandbox-console section p { margin:.4rem 0; }.sandbox-console section button { font-size:7px; margin:0; padding:4px 5px; width:auto; }
+    .home-cta { align-items:center; background:rgba(255,255,255,.8); border:1px solid var(--rule); border-radius:9px; display:grid; gap:3rem; grid-template-columns:1fr auto; margin-bottom:2.7rem; margin-top:3.5rem; padding:1.5rem 1.8rem; }.home-cta small { display:block; }.home-cta h2 { font-size:2.1rem; margin:.45rem 0; }.home-cta p { color:#75756f; font:10px/1.55 "JetBrains Mono",monospace; max-width:430px; }.home-cta>div:last-child { text-align:right; }.home-cta .row { display:block; font:600 9px "JetBrains Mono",monospace; margin:.45rem 0 0 auto; padding:.75rem .9rem; width:auto; }.home-cta>div:last-child>small { margin-top:.65rem; }.marketing-footer { border-top:1px solid #ededE7; display:flex; justify-content:space-between; max-width:none; padding-bottom:2rem; padding-top:1rem; }
+    @media (max-width:900px) { .primary-nav button[data-home-scroll] { display:none; }.home-hero { gap:2rem; grid-template-columns:1fr; }.policy-section { grid-template-columns:1fr; }.sandbox-shell { grid-template-columns:150px 1fr; }.sandbox-console { border-top:1px solid var(--rule); grid-column:span 2; }.home-band,.home-hero,.home-cta,.marketing-footer { padding-left:18px; padding-right:18px; } }
+    @media (max-width:620px) { .topbar { padding:0 .8rem; }.primary-nav { margin-left:auto; margin-right:0; }.primary-nav button:not([data-nav="auth"]):not([data-nav="home"]) { display:none; }.header-actions { display:none; }.home-hero { padding-top:2.6rem; }.home-hero h1 { font-size:3.15rem !important; }.agent-row,.pipeline-notes,.isolation-grid { grid-template-columns:1fr; }.agent-row article { min-height:80px; }.pipeline-notes span { min-height:auto; }.policy-matrix { grid-template-columns:1fr; }.policy-matrix article,.policy-matrix article+article,.policy-matrix article:first-child { border-radius:7px; }.policy-matrix article+article { border-left:1px solid var(--rule); margin-top:.65rem; }.workspace-cells,.roles { grid-template-columns:1fr; }.cli-terminal,.home-cta { grid-template-columns:1fr; }.cli-terminal>div+div { border-left:0; border-top:1px solid #353532; padding-left:0; padding-top:.8rem; }.sandbox-shell { grid-template-columns:1fr; }.sandbox-shell aside,.claims-preview { border-bottom:1px solid var(--rule); border-right:0; }.sandbox-console { grid-column:auto; }.sandbox-preview .section-kicker em { margin:0; }.home-cta>div:last-child { text-align:left; }.home-cta .row { margin-left:0; }.marketing-footer { gap:.8rem; } .marketing-footer span:nth-child(2) { display:none; } }
   </style>
 </head>
 <body>
@@ -467,10 +497,12 @@
     </div>
     <nav class="primary-nav" aria-label="Primary">
       <button type="button" data-nav="home" aria-current="page">Marketing</button>
+      <button type="button" data-home-scroll="pipeline">Pipeline</button>
+      <button type="button" data-home-scroll="policies">Policies</button>
+      <button type="button" data-home-scroll="cli">CLI</button>
       <button type="button" data-nav="docs">Docs</button>
-      <button type="button" data-nav="auth" id="navAuthBtn">Sign In</button>
-      <button type="button" data-nav="sandbox">Sandbox</button>
-      <button type="button" data-nav="console" id="navConsoleBtn">Console</button>
+      <button type="button" data-nav="auth" id="navAuthBtn">Log in</button>
+      <button type="button" data-nav="console" id="navConsoleBtn" class="console-nav">Console</button>
     </nav>
     <div class="header-actions">
       <span class="pill ok-pill">forbid(unsafe_code)</span>
@@ -482,92 +514,82 @@
   <main class="container">
     <!-- ==================== 1. LANDING PAGE (HOME) ==================== -->
     <section id="view-home">
-      <div class="card" style="padding: 2rem">
-        <div>
-          <p class="eyebrow">◉ ADR-0003 &nbsp; Human sign-off enforced</p>
-          <h1 style="font-size:1.85rem; max-width:780px">Does this build still match what you shipped and what you promised?</h1>
-          <p class="lead" style="max-width:760px; margin-top:0.9rem">
-            Preflight is the release clearance for Chromium extensions. It isolates every tenant, diffs against your baseline, and enforces policy packs before you push to CWS. Zero runtime execution. Out-of-process Rust.
-          </p>
-          <div style="margin-top:1.25rem">
+      <section class="home-hero" aria-labelledby="marketing-title">
+        <div class="hero-copy">
+          <p class="eyebrow">● ADR-0003 · HUMAN SIGN-OFF ENFORCED</p>
+          <h1 id="marketing-title">Does this build still match <em>what you shipped</em> and what you promised?</h1>
+          <p class="lead">Extension bundles drift. Preflight gates every build before it reaches the Chrome Web Store: deterministic evidence, versioned policy packs, and a human decision when it matters.</p>
+          <div class="hero-actions">
             <button type="button" class="row accent" data-goto="sandbox">Start review →</button>
-            <button type="button" class="row secondary" data-goto="auth">Create workspace</button>
-            <button type="button" class="row secondary" data-goto="docs">CLI + API docs</button>
-            <button type="button" class="row secondary hidden" id="homeDemoBtn">Load Demo Workspace (Harbor Node)</button>
+            <button type="button" class="row secondary cli-copy" data-copy-text="cargo install preflight --locked">$ cargo install preflight <span>⧉</span></button>
           </div>
-          <div style="display:flex;gap:.45rem;flex-wrap:wrap;margin-top:1.1rem"><span class="pill">Harbor Node · isolated per tenant</span><span class="pill">5 agents · Rust · MV3</span></div>
+          <div class="hero-status"><span>●</span> Harbor Node · isolated per tenant <b> SOC2 · no JS execution</b></div>
+          <div class="micro-stats"><div><small>VERDICTS</small><strong>3 types</strong></div><div><small>AGENTS</small><strong>5 deterministic</strong></div><div><small>RUNTIME</small><strong>0 JS exec</strong></div></div>
         </div>
-        <div class="hero-terminal" aria-label="Example Preflight agent console">
-          <div class="terminal-bar"><span class="terminal-dot" style="background:#ff625d"></span><span class="terminal-dot" style="background:#ffbe45"></span><span class="terminal-dot" style="background:#2bcf60"></span><span style="margin-left:auto">preflight — Harbor Node — zsh</span></div>
-          <div>[agent:artifact-hasher] hashing 142 files…</div>
-          <div>[agent:evidence-extractor] parsing manifest + content scripts</div>
-          <div>[agent:baseline-diff] diffing vs v1.4.1</div>
-          <div>[agent:policy-auditor] cws-2026.1 + node-client-2026.1</div>
-          <div class="ok-line">[agent:arbiter] verdict SHIP · 0 findings · auto_ship=false</div>
-          <div>› preflight push —yes —sign-off human</div>
-          <div>✓ build attested at preflight.aetherhost.com.ng</div>
-          <div class="verdict-box"><strong>Verdict</strong><span style="float:right;background:var(--lime);color:#111;border-radius:3px;padding:1px 6px">SHIP</span><br><span style="color:#8f8f88">auto_ship=false · findings=0 · baseline=v1.4.1</span></div>
+        <div class="hero-terminal pale-terminal" aria-label="Illustrative Preflight agent console">
+          <div class="terminal-bar"><span class="terminal-dot" style="background:#ffb0a7"></span><span class="terminal-dot" style="background:#f2df8f"></span><span class="terminal-dot" style="background:#91d9b3"></span><span style="margin-left:auto">preflight · harbor-node@1.4.2</span><span>zsh</span></div>
+          <div class="terminal-event"><span>$ preflight review ./build.zip --claims ./claims.json</span></div>
+          <div class="terminal-event"><i>AGENT 01</i> artifact.rs — sha256:9f3c…a1d2 · 127 files, manifest v3</div>
+          <div class="terminal-event"><i>AGENT 02</i> extract.rs — manifest v3 ok, permissions parsed [storage, tabs, *://*.analytics.io/*]</div>
+          <div class="terminal-event"><i>AGENT 03</i> diff.rs — new host detected vs baseline: *.analytics.io (not in v1.4.1)</div>
+          <div class="terminal-event"><i>AGENT 04</i> rules.rs — host not in claims.json → BLOCK · CWS-07 / PRIV-01</div>
+          <div class="terminal-event terminal-decision"><i>AGENT 05</i> review.rs — verdict: BLOCK · needs human sign-off · 2 evidence chains</div>
+          <div class="terminal-key"><span>● key provenance</span><span>pf_live_••••••••</span><button type="button" class="small secondary" data-goto="auth">Review</button><button type="button" class="small" disabled>Push disabled</button></div>
         </div>
-      </div>
+      </section>
 
-      <div class="card">
-        <div class="card-header">
-          <h2>Structured 5-Agent Static Analysis Pipeline</h2>
-          <span class="pill">Out-of-process Rust binary · Zero JS execution</span>
+      <section class="home-band" id="pipeline">
+        <div class="section-kicker"><span>PIPELINE</span><h2>Five deterministic agents</h2><small>Out-of-process Rust binary · Zero runtime execution</small></div>
+        <div class="agent-row">
+          <article><span>01</span><h3>Artifact Hasher</h3><code>artifact.rs</code></article><article><span>02</span><h3>Evidence Extractor</h3><code>extract.rs</code></article><article><span>03</span><h3>Baseline Diff</h3><code>diff.rs</code></article><article><span>04</span><h3>Policy Auditor</h3><code>rules.rs</code></article><article><span>05</span><h3>Arbiter</h3><code>review.rs</code></article>
         </div>
-        <p class="lead">Every review runs five deterministic analysis agents and streams structured logs explaining what was inspected and why a verdict was reached:</p>
-        <div class="grid-3">
-          <div class="card" style="margin:0; background:#fff">
-            <span class="pill">AGENT 01 · src/artifact.rs</span>
-            <h3>Artifact Gate &amp; Hasher</h3>
-            <p class="muted">Unpacks <code>.zip</code> and <code>.crx</code> v3 archives in memory, computes cryptographic SHA-256 digests, and confines files to the tenant's isolated storage partition.</p>
-          </div>
-          <div class="card" style="margin:0; background:#fff">
-            <span class="pill">AGENT 02 · src/extract.rs</span>
-            <h3>Static Evidence Extractor</h3>
-            <p class="muted">Walks <code>manifest.json</code>, HTML, and JS tokens without ever calling <code>eval</code>. Extracts permissions, network sockets, sensitive APIs, consent checks, and kill switches.</p>
-          </div>
-          <div class="card" style="margin:0; background:#fff">
-            <span class="pill">AGENT 03 · src/diff.rs</span>
-            <h3>Baseline Capability Diff</h3>
-            <p class="muted">Automatically diffs the candidate build against the project's last shipped artifact to flag newly added permissions (<code>DIFF-01</code>) and hosts (<code>DIFF-02</code>).</p>
-          </div>
-          <div class="card" style="margin:0; background:#fff">
-            <span class="pill">AGENT 04 · src/rules.rs</span>
-            <h3>Policy &amp; Claims Auditor</h3>
-            <p class="muted">Evaluates <code>cws-2026.1</code> (MV3, CSP, missing files, cleartext) and <code>node-client-2026.1</code> (host allowlist vs. <code>claims.json</code>, consent gate, loopback protection).</p>
-          </div>
-          <div class="card" style="margin:0; background:#fff">
-            <span class="pill">AGENT 05 · src/review.rs</span>
-            <h3>Release Clearance Arbiter</h3>
-            <p class="muted">Emits <code>block</code>, <code>needs_human</code>, or <code>ship_with_conditions</code>. Enforces ADR-0003: <code>auto_ship</code> is hardcoded to <code>false</code>; a human signs off.</p>
-          </div>
-          <div class="card" style="margin:0; background:#fff">
-            <span class="pill">UNIFIED KEY · pf_live_…</span>
-            <h3>Browser + Rust CLI Bridge</h3>
-            <p class="muted">Your <code>pf_live_…</code> API key works in the Web Console AND directly in your terminal via <code>preflight review --key</code> and <code>preflight push</code>.</p>
-          </div>
-        </div>
-      </div>
+        <div class="pipeline-notes"><span>✓ Explainable chains — every verdict cites rule + diff</span><span>▣ Baseline-locked — compares to last shipped + claims.json</span><span>▣ Human sign-off required for BLOCK &amp; NEEDS_HUMAN</span></div>
+      </section>
 
-      <div class="grid-2">
-        <div class="card">
-          <div class="card-header">
-            <h2>For Organizations &amp; Teams</h2>
-            <span class="pill">accountType: organization</span>
-          </div>
-          <p class="muted">Create an organization workspace, manage multiple extension projects with isolated baselines, and invite team members with scoped RBAC keys (<strong>admin</strong>, <strong>reviewer</strong>, or <strong>ci</strong>).</p>
-          <button type="button" class="row" data-signup-mode="organization">Create Organization Account</button>
-        </div>
-        <div class="card">
-          <div class="card-header">
-            <h2>For Independent Developers</h2>
-            <span class="pill">accountType: individual</span>
-          </div>
-          <p class="muted">Shipping your own Chrome extension solo? Sign up as an Independent Developer to get a personal isolated workspace, project claims storage, and a <code>pf_live_…</code> key for your terminal and browser.</p>
-          <button type="button" class="row secondary" data-signup-mode="individual">Create Individual Account</button>
-        </div>
-      </div>
+      <section class="home-band policy-section" id="policies">
+        <div class="policy-intro"><h2>Policy packs versioned like dependencies</h2><p>Pin to <code>cws-2026.1</code>. Extend with your own <code>claims.json</code>. Rules are pure Rust, auditable, and deterministic.</p><span>audit --pack cws-2026.1 · deterministic</span></div>
+        <div class="policy-matrix"><article><header><strong>cws-2026.1</strong><small>CHROME WEB STORE</small></header><p><code>CWS-01</code> MV3 required <b>BLOCKER</b></p><p><code>CWS-03</code> No broad host patterns <b>HIGH</b></p><p><code>CWS-05</code> No eval / WASM without… <b>BLOCKER</b></p><p><code>CWS-07</code> Declared hosts must match… <b>BLOCKER</b></p><footer>5 rules · locked to sha256:cws…</footer></article><article><header><strong>node-client-2026.1</strong><small>CUSTOM CLAIMS</small></header><p><code>PRIV-01</code> Host list pinned per tenant <b>BLOCKER</b></p><p><code>PRIV-02</code> Permissions require justification <b>HIGH</b></p><p><code>NODE-03</code> No websocket to non-allowlisted host <b>BLOCKER</b></p><p><code>CLAIM-01</code> claims.json version and shape <b>BLOCKER</b></p><footer>5 rules · locked to sha256:node…</footer></article></div>
+      </section>
+
+      <section class="home-band" id="isolation">
+        <div class="section-kicker isolation-heading"><h2>Isolation model</h2><div class="segmented"><b>Teams</b><span>Indie</span></div></div>
+        <div class="isolation-grid"><article><header>WORKSPACE ISOLATION</header><div class="workspace-cells"><span>harbor-prod<br><b>key: pf_live_••••</b></span><span>harbor-staging<br><b>key: pf_live_••••</b></span><span>relay-dev<br><b>key: pf_live_••••</b></span></div><div class="roles"><span><b>admin</b><br>can create keys, projects</span><span><b>reviewer</b><br>can sign-off BLOCK</span><span><b>ci</b><br>can push, cannot sign</span></div><footer>Separation of duties: CI cannot self-approve. Review requires a second human.</footer></article><article><header>AUDIT TRAIL</header><ol><li>09:42:11 review created — drifted-host.zip → BLOCK</li><li>09:43:05 requested changes — justify host or remove</li><li>09:47:22 new build — clean-relay.zip → SHIP WITH CONDITIONS</li><li>09:47:40 signed-off — SHIP</li></ol><footer>All verdicts are append-only, content-addressed. Export to SIEM.</footer></article></div>
+      </section>
+
+      <section class="home-band cli-section" id="cli">
+        <div class="section-kicker"><h2>One key, everywhere</h2><small><code>pf_live</code> scoped to project, not user</small></div>
+        <div class="cli-terminal"><div><small>LOCAL REVIEW</small><button type="button" class="small secondary cli-copy" data-copy-text="preflight review ./build.zip --claims ./claims.json --pack cws-2026.1">COPY</button><pre>$ preflight review ./build.zip \
+  --claims ./claims.json \
+  --pack cws-2026.1 \
+  --key $PREFLIGHT_KEY
+
+  ✓ artifact sha256:9f3c…
+  ✓ 5 agents ok
+  → verdict: BLOCK (CWS-07)</pre></div><div><small>PUSH TO CONTROL PLANE</small><button type="button" class="small secondary cli-copy" data-copy-text="preflight push ./build.zip --project harbor-node --key $PREFLIGHT_KEY">COPY</button><pre>$ preflight push ./build.zip \
+  --project harbor-node \
+  --key $PREFLIGHT_KEY
+
+  → review: r/9f3c…
+  → https://preflight.aetherhost.com.ng
+  → awaiting sign-off</pre></div></div>
+        <div class="api-strip"><span>POST /v1/signup</span><span>POST /v1/sandbox/evaluate</span><span>GET /v1/me</span><span>POST /v1/projects/:id/reviews</span><span>POST /v1/reviews/:id/sign-off</span></div>
+      </section>
+
+      <section class="home-band sandbox-preview" id="try-sandbox">
+        <div class="section-kicker"><h2>Try without signup</h2><small>Deterministic evaluation in the browser view · no workspace required</small><em>● SANDBOX LIVE — no data leaves this tab</em></div>
+        <div class="sandbox-shell"><aside><small>FIXTURES</small><button type="button" data-goto="sandbox">● clean-relay.zip <b>SHIP</b></button><button type="button" data-goto="sandbox">● drifted-host.zip <b>BLOCK</b></button><button type="button" data-goto="sandbox">● broad-perms.zip <b>BLOCK</b></button><button type="button" data-goto="sandbox">● mv2-legacy.zip <b>BLOCK</b></button><button type="button" data-goto="sandbox">● secrets-leak.zip <b>NEEDS_HUMAN</b></button></aside><div class="claims-preview"><header>claims.json · editable <span>ADR-0003</span></header><pre>{
+  "version": "1.4.2",
+  "hosts": ["api.harbor.run", "cdn.harbor.run"],
+  "permissions": ["storage", "activeTab"],
+  "privacy": "strict",
+  "justifications": {
+    "storage": "session state for isolated tenant"
+  }
+}</pre><footer>local validation only <b>strict privacy: ON</b></footer></div><div class="sandbox-console"><header>CONSOLE</header><p>› loading drifted-host.zip …<br>› parsing manifest.json — ok<br>› checking claims.json — hosts match</p><strong>evidence:</strong><div>host: *.analytics.io (new)<br>permission: storage<br>manifest: v3</div><section><b>VERDICT — BLOCK</b><small>pack: cws-2026.1</small><p>New host *.analytics.io not in claims.json · CWS-07</p><button type="button" class="small" data-goto="sandbox">Sign-off required</button> <button type="button" class="small secondary" data-goto="sandbox">View claims</button></section></div></div>
+      </section>
+
+      <section class="home-cta"><div><small>HUMAN SIGN-OFF — THE LAST GATE</small><h2>Ship only what you meant to ship.</h2><p>Preflight runs in CI, blocks drift, and forces a reviewer when policy fails. Rust, deterministic. No JS execution. Same binary locally and in your pipeline.</p></div><div><button type="button" class="row accent" data-goto="auth">Create Workspace →</button><small>Free for personal · team plans available</small><button type="button" class="row secondary cli-copy" data-copy-text="cargo install preflight --locked">cargo install preflight</button></div></section>
+      <footer class="marketing-footer"><span>PREFLIGHT &nbsp; RUST CLI · Web control plane</span><span>MV3 · deterministic · explainable</span><span>GitHub &nbsp; Changelog &nbsp; Security &nbsp; © 2026 Preflight</span></footer>
     </section>
 
     <!-- ==================== 2. DOCUMENTATION (DOCS) ==================== -->
@@ -1092,6 +1114,26 @@ cargo run -- push fixtures/harbor-node/clean-relay.zip \
     });
     document.querySelectorAll("[data-goto]").forEach((btn) => {
       btn.addEventListener("click", () => switchView(btn.dataset.goto));
+    });
+    document.querySelectorAll("[data-home-scroll]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        switchView("home");
+        requestAnimationFrame(() => $(btn.dataset.homeScroll)?.scrollIntoView({ behavior: "smooth", block: "start" }));
+      });
+    });
+    document.querySelectorAll(".cli-copy").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const command = btn.dataset.copyText;
+        if (!command) return;
+        try {
+          await navigator.clipboard.writeText(command);
+          const original = btn.textContent;
+          btn.textContent = "Copied";
+          setTimeout(() => { btn.textContent = original; }, 1400);
+        } catch (_) {
+          // The command remains visible even when clipboard access is unavailable.
+        }
+      });
     });
     $("brandHome").addEventListener("click", (e) => {
       e.preventDefault();
