@@ -8,6 +8,7 @@ import type { Request } from "express";
 import { parseApiKey, parseApiKeyRole, type ApiKeyRole } from "@preflight/domain";
 import { PrismaService } from "../prisma.service";
 import { verifySecret } from "../crypto";
+import { WorkosAuthService } from "./workos-auth.service";
 
 export type AuthContext = {
   organizationId: string;
@@ -16,16 +17,27 @@ export type AuthContext = {
   apiKeyName: string;
   apiKeyPrefix: string;
   role: ApiKeyRole;
+  authMethod: "api_key" | "workos";
 };
 
 @Injectable()
 export class ApiKeyGuard implements CanActivate {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly workos: WorkosAuthService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const req = context.switchToHttp().getRequest<Request & { auth?: AuthContext }>();
+    const http = context.switchToHttp();
+    const req = http.getRequest<Request & { auth?: AuthContext }>();
+    const response = http.getResponse();
     const raw = readKey(req);
-    if (!raw) throw new UnauthorizedException("missing API key");
+    if (!raw) {
+      const sessionAuth = await this.workos.resolveAuth(req, response);
+      if (!sessionAuth) throw new UnauthorizedException("missing API key or browser session");
+      req.auth = sessionAuth;
+      return true;
+    }
     let parsed;
     try {
       parsed = parseApiKey(raw);
@@ -36,7 +48,9 @@ export class ApiKeyGuard implements CanActivate {
       where: { prefix: parsed.prefix },
       include: { organization: true },
     });
-    if (!row || row.revokedAt) throw new UnauthorizedException("invalid API key");
+    if (!row || row.revokedAt || (row.expiresAt && row.expiresAt.getTime() <= Date.now())) {
+      throw new UnauthorizedException("invalid API key");
+    }
     const ok = await verifySecret(parsed.secret, row.hash);
     if (!ok) throw new UnauthorizedException("invalid API key");
     await this.prisma.apiKey.update({
@@ -50,6 +64,7 @@ export class ApiKeyGuard implements CanActivate {
       apiKeyName: row.name,
       apiKeyPrefix: row.prefix,
       role: parseApiKeyRole(row.role, "admin"),
+      authMethod: "api_key",
     };
     return true;
   }

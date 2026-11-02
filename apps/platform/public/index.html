@@ -722,6 +722,14 @@ cargo run -- push fixtures/harbor-node/clean-relay.zip \
             <span class="pill">Organization · Member · Individual</span>
           </div>
           <p class="lead">Paste your personal, invited team member, or organization <code>pf_live_…</code> API key to load your isolated workspace.</p>
+          <div class="card hidden" id="workosLoginCard" style="margin:1rem 0; background:#fcfcf7">
+            <div class="card-header">
+              <h2>Browser sign-in</h2>
+              <span class="pill ok-pill">Staging AuthKit</span>
+            </div>
+            <p class="muted" style="margin-top:0">Use your verified email for this workspace. Your CLI and CI keys remain separate and never enter the browser.</p>
+            <button type="button" class="secondary" id="workosLoginBtn">Continue with email →</button>
+          </div>
           <form id="loginForm" action="/v1/me" method="GET">
             <label for="existingKey">Workspace API Key</label>
             <div class="inline-row">
@@ -1045,6 +1053,7 @@ cargo run -- push fixtures/harbor-node/clean-relay.zip \
     let projectsById = new Map();
     let defaultSampleClaims = null;
     let currentSandboxFixture = "clean-relay";
+    let currentAuthMethod = null;
 
     function esc(value) {
       return String(value ?? "")
@@ -1201,6 +1210,17 @@ cargo run -- push fixtures/harbor-node/clean-relay.zip \
       }
     }).catch(() => {});
 
+    // Browser sessions are optional: the product continues to support API keys
+    // for local Rust CLI and CI use even when WorkOS is not configured.
+    fetch("/v1/auth/workos/status").then((r) => r.json()).then((status) => {
+      if (!status.enabled) return;
+      $("workosLoginCard").classList.remove("hidden");
+      $("workosLoginBtn").addEventListener("click", () => {
+        location.assign("/v1/auth/workos/login?return_to=" + encodeURIComponent("/#console"));
+      });
+      if (status.authenticated) enterWorkspace("", true, "workos");
+    }).catch(() => {});
+
     // Auto-restore saved session key
     const saved = localStorage.getItem("pf_key");
     if (saved) {
@@ -1345,17 +1365,25 @@ cargo run -- push fixtures/harbor-node/clean-relay.zip \
       enterWorkspace($("consoleKeyInput").value.trim(), true);
     });
 
-    $("signOutBtn").addEventListener("click", () => {
+    $("signOutBtn").addEventListener("click", async () => {
       localStorage.removeItem("pf_key");
       currentSession = null;
+      const signedInWithWorkos = currentAuthMethod === "workos";
+      currentAuthMethod = null;
       $("headerContext").textContent = "Chromium Extension Release Clearance";
       $("navAuthBtn").textContent = "Login / Sign Up";
+      if (signedInWithWorkos) {
+        const res = await fetch("/v1/auth/workos/logout", { method: "POST" });
+        const body = await res.json().catch(() => ({}));
+        location.assign(body.logoutUrl || "/");
+        return;
+      }
       switchView("home");
     });
 
     function headers(key) {
       const k = key || localStorage.getItem("pf_key") || "";
-      return { Authorization: "Bearer " + k };
+      return k ? { Authorization: "Bearer " + k } : {};
     }
 
     function updateCliPreview() {
@@ -1388,19 +1416,24 @@ cargo run -- push fixtures/harbor-node/clean-relay.zip \
       updateCliPreview();
     }
 
-    async function enterWorkspace(key, navigateToConsole = true) {
-      if (!key) {
-        $("gateError").textContent = "Paste a valid pf_live_ API key.";
-        return;
-      }
+    async function enterWorkspace(key, navigateToConsole = true, authMethod = "api_key") {
       const res = await fetch("/v1/me", { headers: headers(key) });
       if (!res.ok) {
-        $("gateError").textContent = "Invalid or revoked API key.";
+        $("gateError").textContent = authMethod === "workos"
+          ? "This WorkOS account is not linked to a Preflight workspace yet. Create a workspace with the same email, or use its API key once."
+          : "Invalid or revoked API key.";
         return;
       }
-      localStorage.setItem("pf_key", key);
-      $("consoleKeyInput").value = key;
-      $("existingKey").value = key;
+      currentAuthMethod = authMethod;
+      if (authMethod === "api_key") {
+        localStorage.setItem("pf_key", key);
+        $("consoleKeyInput").value = key;
+        $("existingKey").value = key;
+      } else {
+        localStorage.removeItem("pf_key");
+        $("consoleKeyInput").value = "";
+        $("existingKey").value = "";
+      }
       const me = await res.json();
       currentSession = me;
       projectsById = new Map(me.projects.map((p) => [p.id, p]));
@@ -1410,7 +1443,7 @@ cargo run -- push fixtures/harbor-node/clean-relay.zip \
       const keyInfo = me.currentKey
         ? `${me.currentKey.name} (${me.currentKey.role} · ${me.currentKey.prefix})`
         : "authenticated";
-      $("consoleActorPill").textContent = keyInfo;
+      $("consoleActorPill").textContent = authMethod === "workos" ? `WorkOS browser session · ${keyInfo}` : keyInfo;
       $("headerContext").textContent = `${me.organization.name} (${me.organization.slug}) · ${me.currentKey?.role || "admin"}`;
       $("navAuthBtn").textContent = "Switch Account";
 

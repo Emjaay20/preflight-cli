@@ -8,6 +8,8 @@ import { AccountsController } from "./accounts.controller";
 import { AccountsService } from "./accounts.service";
 import { BlobsController } from "./cas/blobs.controller";
 import { InternalBlobGuard } from "./cas/internal-blob.guard";
+import { WorkosAuthController } from "./auth/workos-auth.controller";
+import { WorkosAuthService } from "./auth/workos-auth.service";
 
 @Module({
   imports: [PlatformCoreModule],
@@ -17,7 +19,8 @@ import { InternalBlobGuard } from "./cas/internal-blob.guard";
     ReviewsController,
     AccountsController,
     BlobsController,
+    WorkosAuthController,
   ],
-  providers: [ApiKeyGuard, InternalBlobGuard, AccountsService],
+  providers: [ApiKeyGuard, InternalBlobGuard, AccountsService, WorkosAuthService],
 })
 export class AppModule {}

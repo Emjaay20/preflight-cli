@@ -21,6 +21,7 @@ model Organization {
   retentionDays Int      @default(14)
   projects    Project[]
   apiKeys     ApiKey[]
+  workosIdentities WorkosIdentity[]
   auditEvents AuditEvent[]
   accessRequests AccessRequest[]
 }
@@ -39,6 +40,24 @@ model ApiKey {
   revokedAt      DateTime?
   expiresAt      DateTime?
   replacedById   String?
+  workosIdentities WorkosIdentity[]
+}
+
+// A browser identity is deliberately separate from an API key.  The API key
+// remains the credential for local/CI use, while a WorkOS account can receive
+// the same workspace role through an encrypted browser session.
+model WorkosIdentity {
+  id            String       @id @default(cuid())
+  workosUserId  String       @unique
+  email         String
+  organizationId String
+  organization  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  apiKeyId      String       @unique
+  apiKey        ApiKey       @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([organizationId, email])
 }
 
 model AuditEvent {

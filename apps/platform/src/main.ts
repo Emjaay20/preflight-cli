@@ -2,12 +2,15 @@ import "reflect-metadata";
 import { NestFactory } from "@nestjs/core";
 import { Logger } from "nestjs-pino";
 import helmet from "helmet";
+import cookieParser from "cookie-parser";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { AppModule } from "./app.module";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   app.useLogger(app.get(Logger));
+  app.getHttpAdapter().getInstance().set("trust proxy", 1);
+  app.use(cookieParser());
   app.use(
     helmet({
       contentSecurityPolicy: {

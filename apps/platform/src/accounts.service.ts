@@ -288,7 +288,19 @@ export class AccountsService {
     const current = await this.prisma.apiKey.findFirst({ where: { id: keyId, organizationId, revokedAt: null } });
     if (!current) throw new NotFoundException("active API key not found in this organization");
     const replacement = await this.mintKey(organizationId, `${current.name} (rotated)`, current.role, current.email ?? undefined);
-    await this.prisma.apiKey.update({ where: { id: keyId }, data: { revokedAt: new Date(), replacedById: replacement.id } });
+    await this.prisma.$transaction([
+      this.prisma.apiKey.update({
+        where: { id: keyId },
+        data: { revokedAt: new Date(), replacedById: replacement.id },
+      }),
+      // Browser identities are tied to the member's role key. Preserve the
+      // linkage across a rotation so rotating CLI/CI material does not evict a
+      // legitimate browser session from its workspace.
+      this.prisma.workosIdentity.updateMany({
+        where: { apiKeyId: keyId },
+        data: { apiKeyId: replacement.id },
+      }),
+    ]);
     await this.prisma.auditEvent.create({ data: { organizationId, actor: current.prefix, action: "key.rotated", targetType: "api_key", targetId: keyId, metadata: { replacementId: replacement.id } } });
     return replacement;
   }
