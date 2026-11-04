@@ -7,6 +7,7 @@ import {
   Inject,
   NotFoundException,
   Post,
+  UseGuards,
 } from "@nestjs/common";
 import { promises as fs } from "node:fs";
 import os from "node:os";
@@ -20,6 +21,7 @@ import {
 } from "@preflight/domain";
 import { TOKENS } from "./tokens";
 import { sha256 } from "./crypto";
+import { PublicSandboxRateLimitGuard } from "./public-sandbox-rate-limit.guard";
 
 const SANDBOX_FIXTURES = ["clean-relay", "extra-host", "broad-hosts", "remote-script"] as const;
 
@@ -59,12 +61,15 @@ export class DashboardController {
       packs: ["cws-2026.1", "node-client-2026.1"],
       fixtures: SANDBOX_FIXTURES,
       sampleClaims,
-      demo: process.env.DEMO_MODE === "true",
-      demoKey: process.env.DEMO_MODE === "true" ? process.env.DEMO_API_KEY : undefined,
+      // The public dashboard intentionally never receives an API key. The
+      // sandbox below is anonymous and ephemeral; persistent workspaces use
+      // a key minted to their own organization or a WorkOS browser session.
+      sandbox: "anonymous-ephemeral",
     };
   }
 
   @Post("v1/sandbox/evaluate")
+  @UseGuards(PublicSandboxRateLimitGuard)
   async evaluateSandbox(@Body() body: { fixture?: string; claims?: unknown }) {
     const fixture = body.fixture ?? "clean-relay";
     if (!SANDBOX_FIXTURES.includes(fixture as (typeof SANDBOX_FIXTURES)[number])) {

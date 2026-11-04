@@ -12,6 +12,7 @@ import { WorkosAuthController } from "./auth/workos-auth.controller";
 import { WorkosAuthService } from "./auth/workos-auth.service";
 import { OperatorController } from "./operator/operator.controller";
 import { OperatorGuard } from "./operator/operator.guard";
+import { PublicSandboxRateLimitGuard } from "./public-sandbox-rate-limit.guard";
 
 @Module({
   imports: [PlatformCoreModule],
@@ -24,6 +25,13 @@ import { OperatorGuard } from "./operator/operator.guard";
     WorkosAuthController,
     OperatorController,
   ],
-  providers: [ApiKeyGuard, InternalBlobGuard, AccountsService, WorkosAuthService, OperatorGuard],
+  providers: [
+    ApiKeyGuard,
+    InternalBlobGuard,
+    AccountsService,
+    WorkosAuthService,
+    OperatorGuard,
+    PublicSandboxRateLimitGuard,
+  ],
 })
 export class AppModule {}

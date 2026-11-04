@@ -29,7 +29,6 @@ services:
     working_dir: /app/apps/platform
     environment:
       DATABASE_URL: postgresql://preflight:preflight@postgres:5432/preflight
-      DEMO_API_KEY: pf_live_demo_harbor_localdevsecret0001
     depends_on:
       postgres:
         condition: service_healthy
@@ -49,8 +48,6 @@ services:
       DATA_DIR: /data
       FIXTURES_DIR: /app/fixtures/harbor-node
       PREFLIGHT_BIN: /usr/local/bin/preflight
-      DEMO_MODE: "true"
-      DEMO_API_KEY: pf_live_demo_harbor_localdevsecret0001
       INTERNAL_BLOB_TOKEN: ${INTERNAL_BLOB_TOKEN:-}
       LOG_LEVEL: info
       WORKOS_CLIENT_ID: ${WORKOS_CLIENT_ID:-}

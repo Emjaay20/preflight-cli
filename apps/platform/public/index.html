@@ -715,7 +715,7 @@ cargo run -- push fixtures/harbor-node/clean-relay.zip \
           <p class="err" id="signupError" aria-live="polite"></p>
         </div>
 
-        <!-- Sign In + Demo Account Card -->
+        <!-- Sign In -->
         <div class="card">
           <div class="card-header">
             <h2>Sign In to Console</h2>
@@ -739,15 +739,6 @@ cargo run -- push fixtures/harbor-node/clean-relay.zip \
             <button type="submit" id="useKey">Load Workspace Console</button>
           </form>
           <p class="err" id="gateError" aria-live="polite"></p>
-
-          <div class="card" id="demoCard" style="margin-top:1.5rem; background:#fff">
-            <div class="card-header">
-              <h2>Demo Account (Harbor Node)</h2>
-              <span class="pill ok-pill">Pre-seeded Tenant</span>
-            </div>
-            <p class="muted" style="margin-top:0">Want to explore the full authenticated Console Floor immediately? Use the pre-seeded <strong>Harbor</strong> demo tenant.</p>
-            <button type="button" class="secondary" id="useDemoBtn">Sign In with Demo Account</button>
-          </div>
         </div>
       </div>
     </section>
@@ -1192,18 +1183,12 @@ cargo run -- push fixtures/harbor-node/clean-relay.zip \
     }
     updateSignupAccountMode();
 
-    // Load metadata + Demo key availability
+    // Load sample claims for the anonymous, ephemeral sandbox. Public
+    // metadata deliberately contains no organization or API-key credentials.
     fetch("/v1/meta").then((r) => r.json()).then((m) => {
       if (m.sampleClaims) {
         defaultSampleClaims = m.sampleClaims;
         $("sandboxClaims").value = JSON.stringify(m.sampleClaims, null, 2);
-      }
-      if (m.demo && m.demoKey) {
-        $("homeDemoBtn").classList.remove("hidden");
-        $("homeDemoBtn").addEventListener("click", () => enterWorkspace(m.demoKey, true));
-        $("useDemoBtn").addEventListener("click", () => enterWorkspace(m.demoKey, true));
-      } else {
-        $("demoCard").classList.add("hidden");
       }
     }).catch(() => {});
 

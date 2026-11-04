@@ -42,7 +42,9 @@ The control plane must not `eval` or execute uploaded extension JavaScript. The 
 - Helmet CSP on the dashboard.
 - 20 MB upload cap.
 - Uploaded JS is never executed by Node.
-- Demo key is injected into the dashboard **only** when `DEMO_MODE=true`.
+- The public dashboard never receives an API key. Its sandbox is anonymous,
+  ephemeral, and limited to bundled fixtures; persistent workspaces use their
+  own API key or a WorkOS browser session.
 
 ## Failure and retries
 

@@ -78,8 +78,6 @@ docker compose up --build
 # operations: http://localhost:3080/health/operations
 ```
 
-Demo API key is only for the optional local demo tenant (`Use demo instead of creating an org`).
-
 **Real use:** open the dashboard → create an organization → copy the API key (shown once) → upload your zip + claims.
 
 The free evaluation tier allows two projects, ten reviews per calendar month,
@@ -129,6 +127,8 @@ waits for the worker verdict, writes a GitHub check, and can stop a merge for
 - [Operations](docs/operations.md)
 - [CLI installation](docs/cli-installation.md)
 - [Evaluation data policy](docs/evaluation-policy.md)
+- [Portfolio case study](docs/portfolio-case-study.md)
+- [Demo recording guide](docs/demo/wynd-labs-demo.md)
 
 ## Layout
 

@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { mintApiKey, parseApiKey } from "@preflight/domain";
+import { parseApiKey } from "@preflight/domain";
 import { hashSecret } from "../src/crypto";
 
 const prisma = new PrismaClient();
@@ -21,23 +21,28 @@ async function main() {
     },
   });
 
-  const plaintext = process.env.DEMO_API_KEY ?? mintApiKey().plaintext;
-  const parsed = parseApiKey(plaintext);
-  await prisma.apiKey.upsert({
-    where: { prefix: parsed.prefix },
-    update: { hash: await hashSecret(parsed.secret), revokedAt: null, name: "demo" },
-    create: {
-      organizationId: org.id,
-      name: "demo",
-      prefix: parsed.prefix,
-      hash: await hashSecret(parsed.secret),
-    },
-  });
+  // A fixture workspace does not need an always-valid credential. Supplying a
+  // local DEMO_API_KEY is optional and is useful only for a developer's local
+  // test run. It is never logged and never made available to the dashboard.
+  const plaintext = process.env.DEMO_API_KEY;
+  if (plaintext) {
+    const parsed = parseApiKey(plaintext);
+    await prisma.apiKey.upsert({
+      where: { prefix: parsed.prefix },
+      update: { hash: await hashSecret(parsed.secret), revokedAt: null, name: "local-fixture" },
+      create: {
+        organizationId: org.id,
+        name: "local-fixture",
+        prefix: parsed.prefix,
+        hash: await hashSecret(parsed.secret),
+      },
+    });
+  }
 
   console.log("seeded");
   console.log(`organization: ${org.slug} (${org.id})`);
   console.log(`project:      ${project.slug} (${project.id})`);
-  console.log(`api key:      ${plaintext}`);
+  console.log(`fixture key:  ${plaintext ? "configured (redacted)" : "not configured"}`);
 }
 
 main()

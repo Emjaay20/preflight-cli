@@ -4,9 +4,39 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+const MAX_ARTIFACT_BYTES: u64 = 25 * 1024 * 1024;
+const MAX_UNCOMPRESSED_BYTES: u64 = 100 * 1024 * 1024;
+const MAX_ARCHIVE_FILES: usize = 5_000;
+const MAX_COMPRESSION_RATIO: u64 = 100;
+
 pub struct Artifact {
     pub label: String,
     pub files: BTreeMap<String, Vec<u8>>,
+}
+
+#[derive(Default)]
+struct ArtifactBudget {
+    files: usize,
+    bytes: u64,
+}
+
+impl ArtifactBudget {
+    fn add(&mut self, path: &str, bytes: u64) -> Result<(), String> {
+        self.files += 1;
+        self.bytes = self.bytes.saturating_add(bytes);
+        if self.files > MAX_ARCHIVE_FILES {
+            return Err(format!(
+                "artifact has more than {MAX_ARCHIVE_FILES} files; refusing archive expansion"
+            ));
+        }
+        if self.bytes > MAX_UNCOMPRESSED_BYTES {
+            return Err(format!(
+                "artifact expands beyond {} MiB at {path}; refusing archive expansion",
+                MAX_UNCOMPRESSED_BYTES / (1024 * 1024)
+            ));
+        }
+        Ok(())
+    }
 }
 
 struct TempPath {
@@ -30,10 +60,16 @@ pub fn load(path: &Path) -> Result<Artifact, String> {
     }
     let files = if path.is_dir() {
         let mut out = BTreeMap::new();
-        walk_dir(path, path, &mut out)?;
+        walk_dir(path, path, &mut out, &mut ArtifactBudget::default())?;
         out
     } else {
         let bytes = fs::read(path).map_err(|e| format!("read {}: {e}", path.display()))?;
+        if bytes.len() as u64 > MAX_ARTIFACT_BYTES {
+            return Err(format!(
+                "artifact exceeds the {} MiB input limit",
+                MAX_ARTIFACT_BYTES / (1024 * 1024)
+            ));
+        }
         let zip_bytes = zip_payload(&bytes)?;
         unzip_bytes(&zip_bytes)?
     };
@@ -92,6 +128,7 @@ fn unzip_bytes(bytes: &[u8]) -> Result<BTreeMap<String, Vec<u8>>, String> {
     };
     fs::create_dir_all(&dest).map_err(|e| e.to_string())?;
     fs::write(&zip_path, bytes).map_err(|e| e.to_string())?;
+    inspect_zip(&zip_path, bytes.len() as u64)?;
     let output = Command::new("unzip")
         .arg("-qq")
         .arg("-o")
@@ -112,7 +149,7 @@ fn unzip_bytes(bytes: &[u8]) -> Result<BTreeMap<String, Vec<u8>>, String> {
         return Err(format!("unzip failed: {err}{out}"));
     }
     let mut files = BTreeMap::new();
-    walk_dir(&dest, &dest, &mut files)?;
+    walk_dir(&dest, &dest, &mut files, &mut ArtifactBudget::default())?;
     let canon_dest = dest.canonicalize().map_err(|e| e.to_string())?;
     for key in files.keys() {
         let candidate = dest.join(key);
@@ -124,6 +161,53 @@ fn unzip_bytes(bytes: &[u8]) -> Result<BTreeMap<String, Vec<u8>>, String> {
     Ok(files)
 }
 
+fn inspect_zip(zip_path: &Path, compressed_bytes: u64) -> Result<(), String> {
+    // Read only the central-directory listing before extraction. This prevents
+    // common ZIP bombs from consuming disk or memory in the worker sandbox.
+    let output = Command::new("unzip")
+        .arg("-l")
+        .arg(zip_path)
+        .output()
+        .map_err(|e| format!("unable to inspect archive: {e}"))?;
+    if !output.status.success() {
+        return Err("archive central directory could not be read".into());
+    }
+    let listing = String::from_utf8_lossy(&output.stdout);
+    let (files, expanded_bytes) = zip_listing_budget(&listing);
+    if files > MAX_ARCHIVE_FILES {
+        return Err(format!("archive has more than {MAX_ARCHIVE_FILES} files; refusing extraction"));
+    }
+    if expanded_bytes > MAX_UNCOMPRESSED_BYTES {
+        return Err(format!(
+            "archive expands beyond {} MiB; refusing extraction",
+            MAX_UNCOMPRESSED_BYTES / (1024 * 1024)
+        ));
+    }
+    if compressed_bytes > 0 && expanded_bytes > compressed_bytes.saturating_mul(MAX_COMPRESSION_RATIO) {
+        return Err(format!(
+            "archive compression ratio exceeds {MAX_COMPRESSION_RATIO}:1; refusing extraction"
+        ));
+    }
+    Ok(())
+}
+
+fn zip_listing_budget(listing: &str) -> (usize, u64) {
+    let mut files = 0usize;
+    let mut bytes = 0u64;
+    for line in listing.lines() {
+        let parts: Vec<&str> = line.split_whitespace().collect();
+        // `unzip -l` file rows begin with: length, date, time, name. The
+        // summary row does not have a date/time pair, so it is excluded.
+        if parts.len() >= 4 && parts[1].contains('-') && parts[2].contains(':') {
+            if let Ok(size) = parts[0].parse::<u64>() {
+                files += 1;
+                bytes = bytes.saturating_add(size);
+            }
+        }
+    }
+    (files, bytes)
+}
+
 fn temp_path(kind: &str) -> PathBuf {
     let nanos = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -132,7 +216,12 @@ fn temp_path(kind: &str) -> PathBuf {
     std::env::temp_dir().join(format!("preflight-{kind}-{}-{nanos}", std::process::id()))
 }
 
-fn walk_dir(dir: &Path, root: &Path, out: &mut BTreeMap<String, Vec<u8>>) -> Result<(), String> {
+fn walk_dir(
+    dir: &Path,
+    root: &Path,
+    out: &mut BTreeMap<String, Vec<u8>>,
+    budget: &mut ArtifactBudget,
+) -> Result<(), String> {
     let entries = fs::read_dir(dir).map_err(|e| format!("read dir {}: {e}", dir.display()))?;
     for entry in entries {
         let entry = entry.map_err(|e| e.to_string())?;
@@ -147,7 +236,7 @@ fn walk_dir(dir: &Path, root: &Path, out: &mut BTreeMap<String, Vec<u8>>) -> Res
             continue;
         }
         if ft.is_dir() {
-            walk_dir(&path, root, out)?;
+            walk_dir(&path, root, out, budget)?;
             continue;
         }
         if !ft.is_file() {
@@ -164,6 +253,7 @@ fn walk_dir(dir: &Path, root: &Path, out: &mut BTreeMap<String, Vec<u8>>) -> Res
             return Err(format!("refusing path {rel}"));
         }
         let meta = entry.metadata().map_err(|e| e.to_string())?;
+        budget.add(&rel, meta.len())?;
         if meta.len() > 2_000_000 {
             out.insert(rel, Vec::new());
             continue;
@@ -223,5 +313,11 @@ mod tests {
         assert_eq!(crx_zip_offset(&crx2).unwrap(), 18);
         let _ = bytes;
         let _ = crx2;
+    }
+
+    #[test]
+    fn zip_listing_ignores_summary_and_counts_entries() {
+        let listing = "Archive: x.zip\n  Length      Date    Time    Name\n---------  ---------- -----   ----\n     12  2026-11-04 08:00   manifest.json\n     25  2026-11-04 08:00   worker.js\n---------                     -------\n     37                     2 files\n";
+        assert_eq!(zip_listing_budget(listing), (2, 37));
     }
 }
