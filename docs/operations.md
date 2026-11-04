@@ -47,6 +47,33 @@ environments when `CAS_REMOTE_URL` is configured. Do not expose this token to
 dashboard users or CI jobs; CI submits artifacts through the authenticated
 review endpoint instead.
 
+## Evaluation limits and retention
+
+The free evaluation tier is enforced server-side: two projects, ten submitted
+reviews per calendar month, and 25 MB per artifact. Review submission creates a
+short-lived database reservation under a PostgreSQL advisory lock. This avoids
+two simultaneous uploads bypassing the monthly limit.
+
+The worker runs retention every day at 03:00 UTC. Once an artifact exceeds its
+workspace retention period (14 days on the free tier), Preflight removes its
+tenant copy and content-addressed blob when no active review still references
+that blob. It retains the review metadata, findings, verdict, sign-off, and
+audit event. An expired artifact cannot serve as a later baseline, so teams
+that need long-lived comparison history should request a custom retention plan.
+
+## Member onboarding and operator requests
+
+Organization admins create one-time seven-day invitation links. The intended
+member signs in through WorkOS using the invited email and accepts the link;
+no API key is sent in an invitation. CI credentials are minted separately and
+must remain in the CI secret store.
+
+Set `PUBLIC_APP_URL` to the canonical dashboard origin so invitation links do
+not depend on a proxy header. Set `PLATFORM_OPERATOR_EMAILS` to the small,
+comma-separated allowlist of Preflight operators. Those accounts can open
+`/operator`, view access/upgrade requests, and record an outcome. This is not
+a workspace-admin page: it is a platform-owner control surface.
+
 ## Recovery guide
 
 1. Read `/health/operations` and identify whether reviews are queued, running, or failed.

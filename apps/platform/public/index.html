@@ -647,7 +647,7 @@ cargo run -- push fixtures/harbor-node/clean-relay.zip \
           <summary>3. Account Types (Organization vs. Individual) &amp; RBAC Roles</summary>
           <p class="muted">Preflight isolates every workspace at the database, API key, and filesystem levels:</p>
           <ul>
-            <li><strong>Organizations (<code>accountType: "organization"</code>):</strong> Designed for teams. Admins can invite team members (<code>POST /v1/members/invite</code>) and assign each person a dedicated <code>pf_live_…</code> key with role <code>admin</code>, <code>reviewer</code>, or <code>ci</code>.</li>
+            <li><strong>Organizations (<code>accountType: "organization"</code>):</strong> Designed for teams. Admins create a one-time, seven-day invitation link at <code>POST /v1/members/invite</code>. A member accepts it with the invited WorkOS email; CI always receives a separately minted restricted key.</li>
             <li><strong>Individuals (<code>accountType: "individual"</code>):</strong> Designed for solo developers. Creates a personal workspace with zero team-management overhead while still supporting additional personal CLI/CI keys.</li>
             <li><strong>Separation of Duties (ADR-0003):</strong> Keys with the <code>ci</code> role can upload builds and poll verdicts, but are cryptographically blocked from signing off human release decisions.</li>
           </ul>
@@ -663,7 +663,7 @@ cargo run -- push fixtures/harbor-node/clean-relay.zip \
               <tr><td>POST</td><td><code>/v1/signup</code></td><td>Public</td><td>Create an <code>organization</code> or <code>individual</code> workspace and mint initial admin key.</td></tr>
               <tr><td>POST</td><td><code>/v1/sandbox/evaluate</code></td><td>Public</td><td>Run ephemeral sandbox scan on Harbor Node fixtures with live agent console logs.</td></tr>
               <tr><td>GET</td><td><code>/v1/me</code></td><td>Bearer <code>pf_live_…</code></td><td>Retrieve active workspace, account type, current key role, and projects.</td></tr>
-              <tr><td>POST</td><td><code>/v1/members/invite</code></td><td>Admin Key</td><td>Invite a user under an Organization with their own <code>admin</code>, <code>reviewer</code>, or <code>ci</code> key.</td></tr>
+              <tr><td>POST</td><td><code>/v1/members/invite</code></td><td>Admin Key</td><td>Create a seven-day, one-time WorkOS invitation link for an <code>admin</code> or <code>reviewer</code>.</td></tr>
               <tr><td>POST</td><td><code>/v1/projects/:id/reviews</code></td><td>Any Key</td><td>Upload <code>artifact</code> (.zip/.crx) and optional <code>claims</code> JSON for review.</td></tr>
               <tr><td>POST</td><td><code>/v1/reviews/:id/sign-off</code></td><td>Admin / Reviewer</td><td>Record mandatory human release decision (<code>ship</code>, <code>hold</code>, <code>reject</code>).</td></tr>
             </tbody>
@@ -980,7 +980,8 @@ cargo run -- push fixtures/harbor-node/clean-relay.zip \
           <div id="adminControls">
             <!-- Organization Member Invite Form (shown only for Organization accounts) -->
             <form id="inviteMemberForm" action="/v1/members/invite" method="POST" style="margin-bottom:1.25rem; padding-bottom:1rem; border-bottom:1px solid var(--rule)">
-              <label style="margin-top:0">Invite User Under Organization (Mints Personal Member Key)</label>
+              <label style="margin-top:0">Invite a Browser Member (One-Time WorkOS Link)</label>
+              <p class="muted" style="margin:.25rem 0 .7rem">Preflight creates a seven-day invitation link. Copy it to the intended email address; no API key is sent or displayed.</p>
               <div class="grid-2" style="gap:0.5rem">
                 <div>
                   <label for="inviteName" style="margin-top:0.25rem">Member Name</label>
@@ -1002,13 +1003,9 @@ cargo run -- push fixtures/harbor-node/clean-relay.zip \
                     <input type="radio" id="inviteRoleAdmin" name="inviteRole" value="admin" />
                     <span><strong>admin</strong> — full organization, project &amp; member management</span>
                   </label>
-                  <label class="radio-option" for="inviteRoleCi">
-                    <input type="radio" id="inviteRoleCi" name="inviteRole" value="ci" />
-                    <span><strong>ci</strong> — automated pipeline (submit &amp; read only)</span>
-                  </label>
                 </div>
               </fieldset>
-              <button type="submit" class="secondary">+ Invite Member &amp; Generate Key</button>
+              <button type="submit" class="secondary">+ Create Secure Invitation Link</button>
             </form>
 
             <!-- Personal / CI Key Rotation Form -->
@@ -1210,6 +1207,8 @@ cargo run -- push fixtures/harbor-node/clean-relay.zip \
       }
     }).catch(() => {});
 
+    const invitationToken = new URLSearchParams(location.hash.slice(1)).get("invite");
+
     // Browser sessions are optional: the product continues to support API keys
     // for local Rust CLI and CI use even when WorkOS is not configured.
     fetch("/v1/auth/workos/status").then((r) => r.json()).then((status) => {
@@ -1218,8 +1217,32 @@ cargo run -- push fixtures/harbor-node/clean-relay.zip \
       $("workosLoginBtn").addEventListener("click", () => {
         location.assign("/v1/auth/workos/login?return_to=" + encodeURIComponent("/#console"));
       });
-      if (status.authenticated) enterWorkspace("", true, "workos");
+      if (invitationToken) {
+        if (status.authenticated) {
+          acceptInvitation(invitationToken);
+        } else {
+          location.assign("/v1/auth/workos/login?return_to=" + encodeURIComponent("/#invite=" + invitationToken));
+        }
+      } else if (status.authenticated) {
+        enterWorkspace("", true, "workos");
+      }
     }).catch(() => {});
+
+    async function acceptInvitation(token) {
+      const res = await fetch("/v1/invitations/accept", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        $("gateError").textContent = body.message || "This invitation could not be accepted.";
+        switchView("auth");
+        return;
+      }
+      history.replaceState(null, "", "/#console");
+      await enterWorkspace("", true, "workos");
+    }
 
     // Auto-restore saved session key
     const saved = localStorage.getItem("pf_key");
@@ -1297,12 +1320,12 @@ cargo run -- push fixtures/harbor-node/clean-relay.zip \
     }
 
     // Sign Up & Key Modal
-    function showKeyModal(plaintext, title, lead, switchSessionKey) {
+    function showKeyModal(plaintext, title, lead, switchSessionKey, customSnippet) {
       $("keyModalTitle").textContent = title;
       $("keyModalLead").textContent = lead;
       $("onceKey").textContent = plaintext;
       const projId = $("project").value || "<project-id>";
-      $("modalCliSnippet").textContent =
+      $("modalCliSnippet").textContent = customSnippet ||
         `cargo run -- review fixtures/harbor-node/clean-relay --claims fixtures/harbor-node/claims.json --key ${plaintext}\n` +
         `cargo run -- push ./extension.zip --project ${projId} --claims ./claims.json --key ${plaintext}`;
       $("copied").textContent = "";
@@ -1607,12 +1630,12 @@ cargo run -- push fixtures/harbor-node/clean-relay.zip \
       }
       $("inviteName").value = "";
       $("inviteEmail").value = "";
-      await refreshKeys();
       showKeyModal(
-        body.plaintext,
-        `Invited ${body.name} (${body.role})`,
-        `Share this personal API key with ${body.email || body.name}. It grants ${body.role} access to your organization in both the Web Console and the Rust CLI.`,
+        body.inviteUrl,
+        `Invitation for ${body.name} (${body.role})`,
+        `Copy this one-time link and send it to ${body.email}. It expires on ${new Date(body.expiresAt).toLocaleString()}. The member signs in with that email; Preflight never exposes an API key in the invitation.`,
         false,
+        "Member steps:\n1. Open this link.\n2. Continue with the invited email.\n3. Preflight opens the workspace with the assigned role.",
       );
     });
 

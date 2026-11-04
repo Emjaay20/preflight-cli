@@ -24,12 +24,20 @@ import { ApiKeyGuard, type AuthContext } from "../auth/api-key.guard";
 import { CurrentAuth } from "../auth/current-auth";
 import { ReviewsService } from "./reviews.service";
 import { PrismaProjectRepository } from "../persistence/prisma-repos";
+import { ReviewQuotaService } from "../entitlements/review-quota.service";
 
 
 const FIXTURES = ["clean-relay", "extra-host", "broad-hosts", "remote-script"] as const;
 
 function actorLabel(auth: AuthContext): string {
   return `${auth.apiKeyName} (${auth.role} · ${auth.apiKeyPrefix})`;
+}
+
+function assertArtifactLimit(file: Express.Multer.File, limitBytes: number): void {
+  if (file.size > limitBytes) {
+    const maxMb = Math.floor(limitBytes / (1024 * 1024));
+    throw new BadRequestException(`artifact exceeds this workspace's ${maxMb} MB limit`);
+  }
 }
 
 @ApiTags("reviews")
@@ -41,6 +49,7 @@ export class ReviewsController {
     private readonly reviews: ReviewsService,
     private readonly projects: PrismaProjectRepository,
     private readonly prisma: PrismaService,
+    private readonly quota: ReviewQuotaService,
   ) {}
 
   @Get("projects")
@@ -53,7 +62,9 @@ export class ReviewsController {
   @UseInterceptors(
     FileInterceptor("artifact", {
       storage: memoryStorage(),
-      limits: { fileSize: 20 * 1024 * 1024 },
+      // The global ceiling protects process memory; each workspace's exact
+      // entitlement is checked after authentication below.
+      limits: { fileSize: 25 * 1024 * 1024 },
     }),
   )
   async submit(
@@ -63,7 +74,8 @@ export class ReviewsController {
     @Body("claims") claimsRaw?: string,
   ) {
     if (!file) throw new BadRequestException("artifact file is required");
-    await this.enforceReviewQuota(auth);
+    const org = await this.prisma.organization.findUniqueOrThrow({ where: { id: auth.organizationId } });
+    assertArtifactLimit(file, org.artifactLimitBytes);
     let claims: unknown;
     if (claimsRaw && claimsRaw.trim()) {
       try {
@@ -72,6 +84,7 @@ export class ReviewsController {
         throw new BadRequestException("claims must be JSON");
       }
     }
+    const reservation = await this.quota.reserve(auth.organizationId, actorLabel(auth));
     try {
       const review = await this.reviews.submit({
         organizationId: auth.organizationId,
@@ -85,6 +98,8 @@ export class ReviewsController {
       const message = err instanceof Error ? err.message : "submit failed";
       if (message.includes("not found")) throw new NotFoundException(message);
       throw new BadRequestException(message);
+    } finally {
+      await this.quota.release(reservation);
     }
   }
 
@@ -181,7 +196,6 @@ export class ReviewsController {
     @CurrentAuth() auth: AuthContext,
     @Body() body: { fixture?: string; projectId?: string },
   ) {
-    await this.enforceReviewQuota(auth);
     const fixture = body.fixture ?? "clean-relay";
     if (!FIXTURES.includes(fixture as (typeof FIXTURES)[number])) {
       throw new NotFoundException(`unknown fixture ${fixture}`);
@@ -195,26 +209,19 @@ export class ReviewsController {
     const dir = path.join(root, fixture);
     const claims = JSON.parse(await fs.readFile(path.join(root, "claims.json"), "utf8"));
     const buffer = await zipDir(dir);
-    const review = await this.reviews.submit({
-      organizationId: auth.organizationId,
-      projectId: project.id,
-      file: { originalname: `${fixture}.zip`, buffer },
-      claims,
-      submittedBy: actorLabel(auth),
-    });
-    return serialize(review);
-  }
-
-  private async enforceReviewQuota(auth: AuthContext) {
-    const org = await this.prisma.organization.findUniqueOrThrow({ where: { id: auth.organizationId } });
-    const start = new Date();
-    start.setUTCDate(1); start.setUTCHours(0, 0, 0, 0);
-    const used = await this.prisma.review.count({ where: { project: { organizationId: auth.organizationId }, createdAt: { gte: start } } });
-    if (used >= org.reviewLimit) {
-      await this.prisma.auditEvent.create({ data: { organizationId: auth.organizationId, actor: actorLabel(auth), action: "quota.review.denied", targetType: "workspace", metadata: { used, limit: org.reviewLimit } } });
-      throw new ForbiddenException(`free evaluation review limit reached (${org.reviewLimit}/month); request an upgrade at yusuf@yusufsaka.dev`);
+    const reservation = await this.quota.reserve(auth.organizationId, actorLabel(auth));
+    try {
+      const review = await this.reviews.submit({
+        organizationId: auth.organizationId,
+        projectId: project.id,
+        file: { originalname: `${fixture}.zip`, buffer },
+        claims,
+        submittedBy: actorLabel(auth),
+      });
+      return serialize(review);
+    } finally {
+      await this.quota.release(reservation);
     }
-    await this.prisma.auditEvent.create({ data: { organizationId: auth.organizationId, actor: actorLabel(auth), action: "review.quota.reserved", targetType: "workspace", metadata: { used, limit: org.reviewLimit } } });
   }
 }
 

@@ -17,7 +17,7 @@ type LoginAttempt = {
   issuedAt: number;
 };
 
-type BrowserUser = {
+export type BrowserUser = {
   id: string;
   email: string;
 };
@@ -125,6 +125,10 @@ export class WorkosAuthService {
       authenticated: Boolean(user),
       user: user ? { id: user.id, email: user.email } : null,
     };
+  }
+
+  async currentBrowserUser(request: Request, response?: Response): Promise<BrowserUser | null> {
+    return this.authenticatedUser(request, response);
   }
 
   async logoutUrl(request: Request, response: Response): Promise<string> {

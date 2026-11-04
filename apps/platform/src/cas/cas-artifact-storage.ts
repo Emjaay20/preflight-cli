@@ -173,4 +173,19 @@ export class CasArtifactStorage implements ArtifactStorage {
   async getBlob(sha256: string): Promise<Buffer | null> {
     return this.cas.getBuffer(sha256);
   }
+
+  async deleteArtifact(ref: { artifactPath: string }): Promise<boolean> {
+    const tenantRoot = path.join(this.root, "tenants") + path.sep;
+    const target = path.resolve(ref.artifactPath);
+    if (!target.startsWith(tenantRoot)) return false;
+    try {
+      await fs.unlink(target);
+      // Artifacts receive their own UUID directory. Removing only that empty
+      // leaf directory prevents cleanup from traversing out of the tenant.
+      await fs.rmdir(path.dirname(target)).catch(() => undefined);
+      return true;
+    } catch {
+      return false;
+    }
+  }
 }

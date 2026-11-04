@@ -12,6 +12,7 @@ import { BullReviewQueue, REVIEW_QUEUE_NAME } from "./queue/bull-review.queue";
 import { ReviewsService } from "./reviews/reviews.service";
 import { TOKENS } from "./tokens";
 import { OperationsService } from "./observability/operations.service";
+import { ReviewQuotaService } from "./entitlements/review-quota.service";
 
 export function redisUrl(): string {
   return process.env.REDIS_URL ?? "redis://127.0.0.1:6379";
@@ -45,6 +46,7 @@ export function redisConnection() {
   providers: [
     PrismaService,
     OperationsService,
+    ReviewQuotaService,
     PrismaReviewRepository,
     PrismaProjectRepository,
     { provide: DiskArtifactStorage, useFactory: () => new DiskArtifactStorage() },
@@ -88,6 +90,7 @@ export function redisConnection() {
   exports: [
     PrismaService,
     OperationsService,
+    ReviewQuotaService,
     PrismaReviewRepository,
     PrismaProjectRepository,
     ReviewsService,

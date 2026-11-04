@@ -53,6 +53,12 @@ services:
       DEMO_API_KEY: pf_live_demo_harbor_localdevsecret0001
       INTERNAL_BLOB_TOKEN: ${INTERNAL_BLOB_TOKEN:-}
       LOG_LEVEL: info
+      WORKOS_CLIENT_ID: ${WORKOS_CLIENT_ID:-}
+      WORKOS_API_KEY: ${WORKOS_API_KEY:-}
+      WORKOS_REDIRECT_URI: ${WORKOS_REDIRECT_URI:-}
+      WORKOS_COOKIE_SECRET: ${WORKOS_COOKIE_SECRET:-}
+      PUBLIC_APP_URL: ${PUBLIC_APP_URL:-http://localhost:3080}
+      PLATFORM_OPERATOR_EMAILS: ${PLATFORM_OPERATOR_EMAILS:-}
     volumes:
       - artifacts:/data
     depends_on:

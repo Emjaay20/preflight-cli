@@ -6,19 +6,26 @@ import {
   Post,
   Put,
   Param,
+  Req,
+  Res,
   UseGuards,
   BadRequestException,
 } from "@nestjs/common";
+import type { Request, Response } from "express";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { canManageOrg, canSignOff } from "@preflight/domain";
 import { AccountsService } from "./accounts.service";
 import { ApiKeyGuard, type AuthContext } from "./auth/api-key.guard";
 import { CurrentAuth } from "./auth/current-auth";
+import { WorkosAuthService } from "./auth/workos-auth.service";
 
 @ApiTags("account")
 @Controller("v1")
 export class AccountsController {
-  constructor(private readonly accounts: AccountsService) {}
+  constructor(
+    private readonly accounts: AccountsService,
+    private readonly workos: WorkosAuthService,
+  ) {}
 
   @Post("signup")
   async signup(
@@ -116,6 +123,7 @@ export class AccountsController {
   @Post("members/invite")
   inviteMember(
     @CurrentAuth() auth: AuthContext,
+    @Req() request: Request,
     @Body() body: { name?: string; email?: string; role?: string },
   ) {
     if (!canManageOrg(auth.role)) {
@@ -128,7 +136,33 @@ export class AccountsController {
       name: body.name,
       email: body.email,
       role: body.role,
-    });
+    }).then((invitation) => ({
+      ...invitation,
+      inviteUrl: `${publicAppUrl(request)}/#invite=${encodeURIComponent(invitation.token)}`,
+      // Do not return the raw token separately; the URL is the one-time
+      // secret the administrator shares with the intended member.
+      token: undefined,
+    }));
+  }
+
+  @Post("invitations/accept")
+  async acceptInvitation(
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+    @Body() body: { token?: string },
+  ) {
+    if (!body.token) throw new BadRequestException("invitation token is required");
+    const user = await this.workos.currentBrowserUser(request, response);
+    if (!user) throw new ForbiddenException("sign in with WorkOS before accepting an invitation");
+    return this.accounts.acceptInvitation({ token: body.token, workosUserId: user.id, email: user.email });
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(ApiKeyGuard)
+  @Get("invitations")
+  async listInvitations(@CurrentAuth() auth: AuthContext) {
+    if (!canManageOrg(auth.role)) throw new ForbiddenException("only admin keys can view invitations");
+    return this.accounts.listInvitations(auth.organizationId);
   }
 
   @ApiBearerAuth()
@@ -165,4 +199,13 @@ export class AccountsController {
     const events = await this.accounts.auditReport(auth.organizationId);
     return { generatedAt: new Date().toISOString(), format: "json", events };
   }
+}
+
+function publicAppUrl(request: Request): string {
+  const configured = process.env.PUBLIC_APP_URL?.trim();
+  if (configured) return configured.replace(/\/$/, "");
+  const host = request.header("x-forwarded-host") ?? request.header("host");
+  const protocol = request.header("x-forwarded-proto") ?? request.protocol;
+  if (!host) throw new BadRequestException("cannot determine public application URL");
+  return `${protocol}://${host}`;
 }

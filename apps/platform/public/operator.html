@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Preflight — Operator Desk</title>
+  <style>
+    :root { --ink:#16140f; --paper:#f3efe4; --card:#faf7f0; --rule:#d7d0c0; --accent:#b85318; --muted:#6b6458; }
+    * { box-sizing:border-box; } body { margin:0; color:var(--ink); background:var(--paper); font:16px/1.5 Georgia,serif; }
+    main { max-width:1000px; margin:0 auto; padding:3rem 1.5rem; } h1 { margin:0; font-size:2.1rem; } p { color:var(--muted); }
+    .eyebrow, code, button, select, textarea { font:12px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace; } .eyebrow { letter-spacing:.12em; text-transform:uppercase; }
+    .card { margin-top:1.5rem; background:var(--card); border:1px solid var(--rule); padding:1.2rem; } .hidden { display:none; }
+    button, select, textarea { border:1px solid var(--ink); background:#fff; color:var(--ink); padding:.55rem .7rem; } button { cursor:pointer; font-weight:700; } button:hover { background:#e8ff4a; }
+    .toolbar { display:flex; align-items:center; justify-content:space-between; gap:.8rem; flex-wrap:wrap; } .requests { display:grid; gap:.8rem; margin-top:1rem; }
+    article { border:1px solid var(--rule); background:#fff; padding:1rem; } h2 { margin:0; font-size:1.15rem; } .meta { color:var(--muted); font:12px ui-monospace,SFMono-Regular,Menlo,monospace; }
+    textarea { width:100%; min-height:68px; margin:.7rem 0; } .actions { display:flex; gap:.45rem; flex-wrap:wrap; } .notice { color:#9b1c1c; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">Preflight / platform operator</div>
+    <h1>Access-request desk</h1>
+    <p>This page is for the platform operator only. It uses the existing WorkOS browser session and is enabled solely for addresses in <code>PLATFORM_OPERATOR_EMAILS</code>.</p>
+    <section class="card" id="loginCard">
+      <p>Sign in with the configured operator email to view upgrade and access requests.</p>
+      <button id="login">Continue with email →</button>
+    </section>
+    <section class="card hidden" id="desk">
+      <div class="toolbar"><strong>Requests</strong><select id="filter"><option value="">All statuses</option><option value="open">Open</option><option value="contacted">Contacted</option><option value="approved">Approved</option><option value="declined">Declined</option></select></div>
+      <p class="notice" id="error" aria-live="polite"></p><div class="requests" id="requests"></div>
+    </section>
+  </main>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const esc = (v) => String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+    async function load() {
+      const status = await fetch('/v1/auth/workos/status').then(r => r.json());
+      if (!status.authenticated) return;
+      const filter = $('filter').value;
+      const res = await fetch('/v1/operator/access-requests' + (filter ? '?status=' + encodeURIComponent(filter) : ''));
+      if (!res.ok) { $('error').textContent = (await res.json().catch(() => ({}))).message || 'Operator access is not enabled for this account.'; return; }
+      $('loginCard').classList.add('hidden'); $('desk').classList.remove('hidden');
+      const rows = await res.json();
+      $('requests').innerHTML = rows.length ? rows.map(r => `<article><h2>${esc(r.organization.name)}</h2><div class="meta">${esc(r.email)} · ${esc(r.status)} · ${new Date(r.createdAt).toLocaleString()}</div><p>${esc(r.message || 'No message supplied.')}</p><textarea id="note-${esc(r.id)}" placeholder="Internal resolution note">${esc(r.resolutionNote || '')}</textarea><div class="actions"><button data-id="${esc(r.id)}" data-status="contacted">Mark contacted</button><button data-id="${esc(r.id)}" data-status="approved">Mark approved</button><button data-id="${esc(r.id)}" data-status="declined">Mark declined</button></div></article>`).join('') : '<p>No requests match this filter.</p>';
+      document.querySelectorAll('[data-id]').forEach(btn => btn.onclick = async () => {
+        const id = btn.dataset.id, status = btn.dataset.status, note = $('note-' + id).value;
+        const reply = await fetch('/v1/operator/access-requests/' + encodeURIComponent(id) + '/resolve', { method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({status,note}) });
+        if (!reply.ok) $('error').textContent = (await reply.json().catch(() => ({}))).message || 'Could not update request.'; else load();
+      });
+    }
+    $('login').onclick = () => location.assign('/v1/auth/workos/login?return_to=' + encodeURIComponent('/operator'));
+    $('filter').onchange = load; load().catch(() => { $('error').textContent = 'Could not load operator desk.'; });
+  </script>
+</body>
+</html>

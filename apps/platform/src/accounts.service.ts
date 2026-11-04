@@ -14,8 +14,9 @@ import {
   type ApiKeyRole,
 } from "@preflight/domain";
 import type { Prisma } from "@prisma/client";
+import { randomBytes } from "node:crypto";
 import { PrismaService } from "./prisma.service";
-import { hashSecret } from "./crypto";
+import { hashSecret, sha256 } from "./crypto";
 import type { AuthContext } from "./auth/api-key.guard";
 
 @Injectable()
@@ -266,7 +267,119 @@ export class AccountsService {
     if (!name || !email) {
       throw new BadRequestException("member name and email are required");
     }
-    return this.mintKey(organizationId, name, input.role ?? "reviewer", email);
+    let role: ApiKeyRole;
+    try {
+      role = parseApiKeyRole(input.role, "reviewer");
+    } catch (err) {
+      throw new BadRequestException(err instanceof Error ? err.message : "invalid role");
+    }
+    if (role === "ci") {
+      throw new BadRequestException("CI access uses a separately minted CI key; it cannot accept a browser invitation");
+    }
+    const token = randomBytes(32).toString("base64url");
+    const invitation = await this.prisma.workspaceInvitation.create({
+      data: {
+        organizationId,
+        name,
+        email: email.toLowerCase(),
+        role,
+        tokenHash: sha256(token),
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
+    });
+    await this.prisma.auditEvent.create({
+      data: {
+        organizationId,
+        actor: "workspace-admin",
+        action: "member.invited",
+        targetType: "invitation",
+        targetId: invitation.id,
+        metadata: { email: invitation.email, role: invitation.role, expiresAt: invitation.expiresAt },
+      },
+    });
+    return {
+      id: invitation.id,
+      name: invitation.name,
+      email: invitation.email,
+      role: parseApiKeyRole(invitation.role, "reviewer"),
+      expiresAt: invitation.expiresAt,
+      token,
+    };
+  }
+
+  async acceptInvitation(input: { token: string; workosUserId: string; email: string }) {
+    const invitation = await this.prisma.workspaceInvitation.findUnique({
+      where: { tokenHash: sha256(input.token) },
+      include: { organization: true },
+    });
+    if (!invitation || invitation.status !== "pending" || invitation.expiresAt.getTime() <= Date.now()) {
+      throw new NotFoundException("this invitation is invalid or has expired");
+    }
+    if (invitation.email.toLowerCase() !== input.email.trim().toLowerCase()) {
+      throw new ConflictException("sign in with the email address that received this invitation");
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const existing = await tx.workosIdentity.findUnique({ where: { workosUserId: input.workosUserId } });
+      if (existing && existing.organizationId !== invitation.organizationId) {
+        throw new ConflictException("this WorkOS account is already linked to another Preflight workspace");
+      }
+
+      let apiKeyId = existing?.apiKeyId;
+      if (!apiKeyId) {
+        // Browser members never receive a plaintext API key as a side effect
+        // of accepting an invite. CLI/CI credentials remain deliberate,
+        // separately-issued secrets.
+        const key = mintApiKey();
+        const row = await tx.apiKey.create({
+          data: {
+            organizationId: invitation.organizationId,
+            name: invitation.name,
+            email: invitation.email,
+            role: invitation.role,
+            prefix: key.prefix,
+            hash: await hashSecret(key.secret),
+          },
+        });
+        apiKeyId = row.id;
+        await tx.workosIdentity.create({
+          data: {
+            workosUserId: input.workosUserId,
+            email: invitation.email,
+            organizationId: invitation.organizationId,
+            apiKeyId,
+          },
+        });
+      }
+
+      await tx.workspaceInvitation.update({
+        where: { id: invitation.id },
+        data: { status: "accepted", acceptedAt: new Date(), acceptedByWorkosId: input.workosUserId },
+      });
+      await tx.auditEvent.create({
+        data: {
+          organizationId: invitation.organizationId,
+          actor: input.email,
+          action: "member.invitation_accepted",
+          targetType: "invitation",
+          targetId: invitation.id,
+          metadata: { role: invitation.role, apiKeyId },
+        },
+      });
+      return {
+        organization: { id: invitation.organization.id, name: invitation.organization.name },
+        role: parseApiKeyRole(invitation.role, "reviewer"),
+      };
+    });
+  }
+
+  async listInvitations(organizationId: string) {
+    return this.prisma.workspaceInvitation.findMany({
+      where: { organizationId },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+      select: { id: true, name: true, email: true, role: true, status: true, expiresAt: true, createdAt: true, acceptedAt: true },
+    });
   }
 
   async revokeKey(organizationId: string, keyId: string, callerKeyId?: string) {

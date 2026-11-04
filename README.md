@@ -56,6 +56,17 @@ cargo run -- review fixtures/harbor-node/extra-host \
 # extra-host exits 2 (block): undeclared partner analytics host
 ```
 
+For a normal developer install, either download a verified binary from the
+repository's GitHub Releases page, or install directly from the reviewed source:
+
+```bash
+cargo install --git https://github.com/Emjaay20/preflight-cli --locked
+preflight --help
+```
+
+Release artifacts are versioned and accompanied by SHA-256 checksums. See
+[CLI installation and release verification](docs/cli-installation.md).
+
 ### Platform (API + worker + Postgres + Redis)
 
 ```bash
@@ -70,6 +81,10 @@ docker compose up --build
 Demo API key is only for the optional local demo tenant (`Use demo instead of creating an org`).
 
 **Real use:** open the dashboard → create an organization → copy the API key (shown once) → upload your zip + claims.
+
+The free evaluation tier allows two projects, ten reviews per calendar month,
+and artifacts up to 25 MB. Customer artifacts are automatically removed after
+14 days; review metadata and audit events remain for traceability.
 
 Click **extra-host** on a workspace to see `block`. Click **clean-relay** for `ship_with_conditions`. A human still signs off.
 
@@ -112,6 +127,8 @@ waits for the worker verdict, writes a GitHub check, and can stop a merge for
 - [ADR 0003 — No automatic ship](docs/adr/0003-no-automatic-ship.md)
 - [Architecture](docs/architecture.md)
 - [Operations](docs/operations.md)
+- [CLI installation](docs/cli-installation.md)
+- [Evaluation data policy](docs/evaluation-policy.md)
 
 ## Layout
 

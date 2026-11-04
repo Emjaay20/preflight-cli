@@ -55,4 +55,17 @@ export class DiskArtifactStorage implements ArtifactStorage {
     }
     throw new Error(`artifact not found at ${ref.artifactPath} (sha256: ${ref.sha256})`);
   }
+
+  async deleteArtifact(ref: { artifactPath: string }): Promise<boolean> {
+    const tenantRoot = path.join(this.root, "tenants") + path.sep;
+    const target = path.resolve(ref.artifactPath);
+    if (!target.startsWith(tenantRoot)) return false;
+    try {
+      await fs.unlink(target);
+      await fs.rmdir(path.dirname(target)).catch(() => undefined);
+      return true;
+    } catch {
+      return false;
+    }
+  }
 }

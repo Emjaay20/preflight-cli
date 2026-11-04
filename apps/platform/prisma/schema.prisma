@@ -22,8 +22,10 @@ model Organization {
   projects    Project[]
   apiKeys     ApiKey[]
   workosIdentities WorkosIdentity[]
+  invitations WorkspaceInvitation[]
   auditEvents AuditEvent[]
   accessRequests AccessRequest[]
+  quotaReservations ReviewQuotaReservation[]
 }
 
 model ApiKey {
@@ -80,8 +82,46 @@ model AccessRequest {
   email String
   message String?
   status String @default("open")
+  handledAt DateTime?
+  handledBy String?
+  resolutionNote String?
   createdAt DateTime @default(now())
   @@index([organizationId, status])
+}
+
+// Invitations deliberately store a hash, never the bearer token that is put
+// in the invitation link. A member accepts with a verified WorkOS browser
+// session whose email must match the invited address.
+model WorkspaceInvitation {
+  id                  String       @id @default(cuid())
+  organizationId      String
+  organization        Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name                String
+  email               String
+  role                String       @default("reviewer")
+  tokenHash           String       @unique
+  status              String       @default("pending")
+  expiresAt           DateTime
+  acceptedAt          DateTime?
+  acceptedByWorkosId  String?
+  createdAt           DateTime     @default(now())
+
+  @@index([organizationId, status])
+  @@index([email, status])
+}
+
+// A short-lived reservation closes the gap between checking the monthly
+// review entitlement and persisting the review. It is removed after a
+// successful submission and ignored once it expires.
+model ReviewQuotaReservation {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  month          DateTime
+  expiresAt      DateTime
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId, month, expiresAt])
 }
 
 

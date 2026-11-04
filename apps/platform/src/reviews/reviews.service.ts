@@ -41,6 +41,8 @@ export interface ArtifactStorage {
   }): Promise<{ localPath: string; cleanup: () => Promise<void> }>;
 
   getBlob?(sha256: string): Promise<Buffer | null>;
+
+  deleteArtifact?(ref: { artifactPath: string }): Promise<boolean>;
 }
 
 export type SubmitReviewInput = {
