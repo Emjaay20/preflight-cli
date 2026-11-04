@@ -122,6 +122,9 @@ export class WorkosAuthService {
     const user = await this.authenticatedUser(request, response);
     return {
       enabled: this.enabled,
+      // This deliberately reports names only, never credential values. It
+      // makes a hosted misconfiguration diagnosable without exposing secrets.
+      missingConfiguration: this.missingConfiguration,
       authenticated: Boolean(user),
       user: user ? { id: user.id, email: user.email } : null,
     };
@@ -168,6 +171,15 @@ export class WorkosAuthService {
 
   private get cookieSecret(): string {
     return process.env.WORKOS_COOKIE_SECRET?.trim() ?? "";
+  }
+
+  private get missingConfiguration(): string[] {
+    return [
+      ["WORKOS_API_KEY", this.apiKey],
+      ["WORKOS_CLIENT_ID", this.clientId],
+      ["WORKOS_REDIRECT_URI", this.redirectUri],
+      ["WORKOS_COOKIE_SECRET", this.cookieSecret],
+    ].filter(([, value]) => !value).map(([name]) => name);
   }
 
   private get cookieOptions() {

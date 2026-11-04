@@ -12,7 +12,7 @@ export class OperatorController {
   @Get("operator")
   @Header("content-type", "text/html; charset=utf-8")
   async page() {
-    return fs.readFile(path.join(__dirname, "..", "public", "operator.html"), "utf8");
+    return fs.readFile(path.join(__dirname, "..", "..", "public", "operator.html"), "utf8");
   }
 
   @UseGuards(OperatorGuard)
