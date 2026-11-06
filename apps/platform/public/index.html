@@ -488,6 +488,80 @@
     #view-home h1 { font-size:clamp(3rem,4vw,4.45rem) !important; line-height:.92; max-width:570px !important; }.hero-copy .lead { color:#666661; font-size:13px; line-height:1.65; margin-top:1.15rem; max-width:440px; }.home-band h3 { font-size:12px; letter-spacing:-.015em; }
     @media (max-width:900px) { .primary-nav button[data-home-scroll] { display:none; }.home-hero { gap:2rem; grid-template-columns:1fr; }.policy-section { grid-template-columns:1fr; }.sandbox-shell { grid-template-columns:150px 1fr; }.sandbox-console { border-top:1px solid var(--rule); grid-column:span 2; }.home-band,.home-hero,.home-cta,.marketing-footer { padding-left:18px; padding-right:18px; } }
     @media (max-width:620px) { .topbar { padding:0 .8rem; }.primary-nav { margin-left:auto; margin-right:0; }.primary-nav button:not([data-nav="auth"]):not([data-nav="home"]) { display:none; }.header-actions { display:none; }.home-hero { padding-top:2.6rem; }.home-hero h1 { font-size:3.15rem !important; }.agent-row,.pipeline-notes,.isolation-grid { grid-template-columns:1fr; }.agent-row article { min-height:80px; }.pipeline-notes span { min-height:auto; }.policy-matrix { grid-template-columns:1fr; }.policy-matrix article,.policy-matrix article+article,.policy-matrix article:first-child { border-radius:7px; }.policy-matrix article+article { border-left:1px solid var(--rule); margin-top:.65rem; }.workspace-cells,.roles { grid-template-columns:1fr; }.cli-terminal,.home-cta { grid-template-columns:1fr; }.cli-terminal>div+div { border-left:0; border-top:1px solid #353532; padding-left:0; padding-top:.8rem; }.sandbox-shell { grid-template-columns:1fr; }.sandbox-shell aside,.claims-preview { border-bottom:1px solid var(--rule); border-right:0; }.sandbox-console { grid-column:auto; }.sandbox-preview .section-kicker em { margin:0; }.home-cta>div:last-child { text-align:left; }.home-cta .row { margin-left:0; }.marketing-footer { gap:.8rem; } .marketing-footer span:nth-child(2) { display:none; } }
+
+    /* Readability pass: preserve the editorial system without asking people
+       to zoom just to understand product claims, review state, or controls. */
+    html, body { font-size:16px; line-height:1.6; }
+    .container { max-width:1200px; }
+    p.lead, .lead, .hero-copy .lead { font-size:16px; line-height:1.65; }
+    h2, .card-header h2 { font-size:12px; letter-spacing:.1em; }
+    h3, .home-band h3 { font-size:15px; line-height:1.35; }
+    .muted { color:#5f5f5a; }
+    button, input, select, textarea { font-size:15px; min-height:44px; }
+    button.row { font-size:14px; min-height:40px; padding:.62rem .9rem; }
+    button.small { font-size:11px; min-height:32px; padding:.36rem .62rem; }
+    label, legend { font-size:12px; line-height:1.35; }
+    .pill, .stamp, .log-tag { font-size:11px; }
+    .kpi-label, .kpi-sub { font-size:12px; }
+    .kpi-value { font-size:2rem; }
+    table { font-size:13px; }
+    table th { font-size:11px; }
+    table td, table th { padding:.82rem; }
+    .console-log, pre, textarea { font-size:13px; line-height:1.65; }
+    .dropzone-note { font-size:12px; line-height:1.55; }
+    .workspace-bar label { font-size:12px; }
+    .console-tabs button { font-size:12px; min-height:38px; padding:.58rem .82rem; }
+
+    .topbar { min-height:60px; }
+    .brand { font-size:12px; }
+    .runtime-tag { font-size:10px; padding:6px 7px; }
+    .primary-nav button { font-size:10px; letter-spacing:.1em; min-height:36px; padding:.55rem .7rem; }
+    .header-actions button { font-size:12px; min-height:38px; padding:.56rem .82rem; }
+    .home-hero { gap:5rem; min-height:500px; }
+    .home-hero .eyebrow, .eyebrow { font-size:10px; }
+    .hero-actions .row { font-size:12px; min-height:42px; }
+    .hero-status { font-size:11px; line-height:1.55; }
+    .micro-stats small { font-size:10px; }
+    .micro-stats strong { font-size:12px; }
+    .pale-terminal { font-size:11px; line-height:1.65; }
+    .pale-terminal .terminal-bar { font-size:10px; }
+    .terminal-event i, .terminal-key { font-size:10px; }
+    .terminal-key button { font-size:10px; min-height:28px; }
+    .section-kicker>span, .section-kicker small, .policy-intro>span,
+    .home-cta small, .marketing-footer { font-size:10px; line-height:1.5; }
+    .agent-row span, .agent-row code { font-size:10px; }
+    .agent-row h3 { font-size:13px; }
+    .pipeline-notes span { font-size:10px; line-height:1.55; }
+    .policy-intro p { font-size:14px; line-height:1.6; }
+    .policy-matrix header strong { font-size:11px; }
+    .policy-matrix header small, .policy-matrix footer { font-size:9px; }
+    .policy-matrix p { font-size:11px; line-height:1.55; }
+    .policy-matrix p code, .policy-matrix p b { font-size:9px; }
+    .isolation-grid article header { font-size:10px; }
+    .workspace-cells span, .roles span { font-size:10px; line-height:1.65; }
+    .isolation-grid footer, .isolation-grid ol { font-size:10px; line-height:1.65; }
+    .cli-terminal small { font-size:10px; }
+    .cli-terminal button { font-size:10px; min-height:28px; }
+    .cli-terminal pre { font-size:11px; line-height:1.65; }
+    .api-strip span { font-size:10px; padding:5px 7px; }
+    .sandbox-shell aside small, .sandbox-shell header { font-size:10px; }
+    .sandbox-shell aside button { font-size:11px; min-height:34px; }
+    .sandbox-shell aside b { font-size:9px; }
+    .claims-preview pre, .sandbox-console>p, .sandbox-console>strong,
+    .sandbox-console>div, .sandbox-console section { font-size:11px; line-height:1.6; }
+    .claims-preview footer, .sandbox-console section button { font-size:10px; }
+    .home-cta p { font-size:13px; line-height:1.65; }
+    .home-cta .row { font-size:11px; min-height:40px; }
+
+    @media (max-width:620px) {
+      html, body { font-size:16px; }
+      .container { padding-left:1rem; padding-right:1rem; }
+      #view-home h1, .home-hero h1 { font-size:clamp(2.7rem,13vw,3.5rem) !important; }
+      .home-hero { gap:2.25rem; min-height:auto; padding-bottom:3rem; }
+      .section-kicker { align-items:flex-start; gap:.65rem; }
+      .section-kicker small { text-align:left; }
+      .home-cta { padding:1.25rem; }
+    }
   </style>
 </head>
 <body>
